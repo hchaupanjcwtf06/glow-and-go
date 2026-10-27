@@ -1,0 +1,14 @@
+# 1.Core Protocol: The Memory Bank (Chống Quên)
+- BẠN LÀ MỘT AI ASSISTANT. Trí nhớ của bạn bị xóa sau mỗi phiên làm việc.
+- TRƯỚC KHI CODE: Bắt buộc đọc file `PROGRESS.md` để biết tiến độ, bug hiện tại và nhiệm vụ hôm nay.
+- TRƯỚC KHI KẾT THÚC: Tự động cập nhật lại file `PROGRESS.md` (Đã xong gì? Bug gì? Tuần tới làm gì?).
+
+# 2.Tech Stack Strict Rules (Chuẩn Slide Môn Học)
+- Frontend: React.js (dùng Vite), Tailwind CSS, Framer Motion. Deploy Vercel.
+- Backend: Node.js, Express.js. Deploy Render.
+- Database: MongoDB (Atlas).
+- KHÔNG tự ý cài đặt thêm thư viện ngoài (như Redux, Prisma, SQL) nếu chưa hỏi ý kiến.
+
+# 3.Commit Farming Strategy (Tối ưu hóa Commit)
+- KHÔNG BAO GIỜ code một lèo quá 20 phút hoặc xong toàn bộ dự án.
+- Tách nhỏ việc. Mỗi khi tạo xong 1 file UI hoặc 1 route API, BẮT BUỘC dừng lại và bảo người dùng: "Hãy gõ lệnh commit: `git commit -m 'feat: [tên tính năng]'`".
