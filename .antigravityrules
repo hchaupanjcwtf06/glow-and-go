@@ -1,14 +1,11 @@
-# 1.Core Protocol: The Memory Bank (Chống Quên)
-- BẠN LÀ MỘT AI ASSISTANT. Trí nhớ của bạn bị xóa sau mỗi phiên làm việc.
-- TRƯỚC KHI CODE: Bắt buộc đọc file `PROGRESS.md` để biết tiến độ, bug hiện tại và nhiệm vụ hôm nay.
-- TRƯỚC KHI KẾT THÚC: Tự động cập nhật lại file `PROGRESS.md` (Đã xong gì? Bug gì? Tuần tới làm gì?).
+# Glow & Go — Antigravity Instructions
 
-# 2.Tech Stack Strict Rules (Chuẩn Slide Môn Học)
-- Frontend: React.js (dùng Vite), Tailwind CSS, Framer Motion. Deploy Vercel.
-- Backend: Node.js, Express.js. Deploy Render.
-- Database: MongoDB (Atlas).
-- KHÔNG tự ý cài đặt thêm thư viện ngoài (như Redux, Prisma, SQL) nếu chưa hỏi ý kiến.
+Read `AGENTS.md` and `PROGRESS.md` at the start of each coding session. `AGENTS.md` is the canonical set of project, architecture, safety, security, quality, and Git workflow rules. Follow those instructions rather than duplicating or overriding them here.
 
-# 3.Commit Farming Strategy (Tối ưu hóa Commit)
-- KHÔNG BAO GIỜ code một lèo quá 20 phút hoặc xong toàn bộ dự án.
-- Tách nhỏ việc. Mỗi khi tạo xong 1 file UI hoặc 1 route API, BẮT BUỘC dừng lại và bảo người dùng: "Hãy gõ lệnh commit: `git commit -m 'feat: [tên tính năng]'`".
+Before edits: summarize the verified repository state and ONE proposed milestone; list files to create/edit and how to verify success. Do not assume the user knows setup steps.
+
+During edits: stay within the approved milestone, keep React `client/` separate from Express `server/`, avoid secrets in frontend or commits, and do not silently install dependencies, push, or deploy.
+
+After edits: report changes and actual checks, ask permission before commit/push/deploy, then update `PROGRESS.md` with facts, blockers, and the next step. Do not claim unverified tasks are complete.
+
+Note: this file is only effective if the current coding agent is configured to load `.antigravityrules`; `AGENTS.md` is the portable primary instructions file.
