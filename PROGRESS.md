@@ -16,7 +16,7 @@ A client/server skincare application with user skin profile and goals, interacti
 - PatrickJS/awesome-cursorrules has **not** been cloned into the project.
 
 ## Milestone tracker
-- [ ] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
+- [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [ ] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
 - [ ] M2 — Configure environment variables, CORS, API integration and safe deployment smoke tests.
 - [ ] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
@@ -27,23 +27,35 @@ A client/server skincare application with user skin profile and goals, interacti
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M0: Verify and prepare repository before generating app code.**
+**M1: Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.**
 
 ## Next actions
-1. Confirm which AI coding agent is used inside VS Code (Copilot, Codex, Antigravity, Cursor, or another extension) to enable the correct instruction-file loading.
-2. Open the actual project root in VS Code and inspect folder tree and `git status`.
-3. Add `AGENTS.md`, update `.antigravityrules` and `PROGRESS.md`; selectively adapt external rules only when needed.
-4. After M0 is verified, start M1 with explicit acceptance criteria.
+1. Plan M1 with strict client/server separation, reusable components, and acceptance criteria.
+2. Ensure initialization commands in Windows PowerShell use `npm.cmd` / `npx.cmd`.
+3. Implement minimal Express server with `/api/health` and React + Vite client without extra libraries.
+4. Verify local execution of both apps, run code review, and present Git commit suggestion for M1.
 
 ## Verification / tests
-- Not run. No project source code was provided for local execution.
+- Runtime verification: Node.js `v24.22.0` and npm `11.19.1` verified via `node -v` and `npm.cmd -v`.
+- Ignore rules verification:
+  - Positive tests (`git check-ignore -v` and `git check-ignore -q`): verified `.env`, `client/.env`, `server/.env`, `client/.env.local`, `server/.env.production`, `node_modules/`, `client/dist/` are correctly ignored (exit code 0).
+  - Negative tests (`git check-ignore -q`): verified `.env.example`, `client/.env.example`, `server/.env.example` are NOT ignored and can be safely committed (exit code 1).
+- Repository status: `git status` confirms untracked files are strictly `.gitignore` and `README.md` (no application code or npm dependencies created).
 
 ## Known issues and decisions pending
-- Coding agent and its instruction-file discovery behavior have not been confirmed.
-- Product data source, authentication method, API providers, and exact MongoDB schema not yet selected.
+- Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
+- Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
+### 2026-10-28 — Milestone M0 completed
+- Verified Git repository status, Node.js (`v24.22.0`), and npm (`11.19.1`).
+- Created root `.gitignore` protecting root, client, and server `.env` files while allowing `.env.example` files to be committed.
+- Created project `README.md` documenting tech stack, architecture, Windows PowerShell notes, and milestones.
+- Ran comprehensive `git check-ignore` checks confirming ignore and exemption rules work as expected.
+- Verified no application code was generated and no dependencies were installed.
+- Marked Milestone M0 as complete.
+
 ### 2026-10-28 — Planning review
 - Reviewed the two provided planning files.
 - Replaced forced file-by-file commits with milestone-based commits.
