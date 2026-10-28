@@ -17,7 +17,7 @@ A client/server skincare application with user skin profile and goals, interacti
 
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
-- [ ] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
+- [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
 - [ ] M2 — Configure environment variables, CORS, API integration and safe deployment smoke tests.
 - [ ] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
 - [ ] M4 — Product CRUD and interactive day/night virtual shelf.
@@ -27,20 +27,30 @@ A client/server skincare application with user skin profile and goals, interacti
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M1: Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.**
+**M1 completed and verified. Awaiting review and commit permission before planning M2.**
 
 ## Next actions
-1. Plan M1 with strict client/server separation, reusable components, and acceptance criteria.
-2. Ensure initialization commands in Windows PowerShell use `npm.cmd` / `npx.cmd`.
-3. Implement minimal Express server with `/api/health` and React + Vite client without extra libraries.
-4. Verify local execution of both apps, run code review, and present Git commit suggestion for M1.
+1. Present M1 verification results and changed files for user review.
+2. Suggest a single, coherent Git commit message for Milestone M1.
+3. Await user approval before committing or planning Milestone M2.
 
 ## Verification / tests
 - Runtime verification: Node.js `v24.22.0` and npm `11.19.1` verified via `node -v` and `npm.cmd -v`.
 - Ignore rules verification:
-  - Positive tests (`git check-ignore -v` and `git check-ignore -q`): verified `.env`, `client/.env`, `server/.env`, `client/.env.local`, `server/.env.production`, `node_modules/`, `client/dist/` are correctly ignored (exit code 0).
+  - Positive tests (`git check-ignore -v` and `git check-ignore -q`): verified `.env`, `client/.env`, `server/.env`, `client/.env.local`, `server/.env.production`, `node_modules/`, `client/node_modules`, `server/node_modules`, `client/dist/` are correctly ignored (exit code 0).
   - Negative tests (`git check-ignore -q`): verified `.env.example`, `client/.env.example`, `server/.env.example` are NOT ignored and can be safely committed (exit code 1).
-- Repository status: `git status` confirms untracked files are strictly `.gitignore` and `README.md` (no application code or npm dependencies created).
+- Backend verification:
+  - `server/src/app.js` and `server/src/index.js` configured with ES Modules (`"type": "module"`), Express, CORS, and dotenv.
+  - Started on port 5000 (`npm.cmd start`).
+  - Tested `GET http://localhost:5000/api/health` via `Invoke-RestMethod`: returned HTTP 200 with `{ "status": "ok", "service": "glow-and-go-backend", "timestamp": "..." }`.
+- Frontend & Proxy verification:
+  - Initialized `client/` using official Vite React JavaScript template (`npm.cmd create vite@latest client -- --template react`).
+  - Integrated Tailwind CSS v4 using official `@tailwindcss/vite` plugin and `@import "tailwindcss";` in `src/index.css`.
+  - Configured Vite dev server on port 3000 with `/api` proxy targeting `http://localhost:5000`.
+  - Tested `GET http://localhost:3000/api/health` via `Invoke-RestMethod` and `curl.exe`: returned HTTP 200 with matching backend payload, verifying proxy and CORS transparency.
+- Production build verification:
+  - Executed `npm.cmd run build` in `client/`: built in 300ms without errors, producing `dist/index.html`, `dist/assets/index-*.css` (containing Tailwind v4 utility styles), and `dist/assets/index-*.js`.
+- Repository status: Untracked changes are strictly contained within `client/` and `server/` source files and `PROGRESS.md`.
 
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
@@ -48,6 +58,19 @@ A client/server skincare application with user skin profile and goals, interacti
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
+### 2026-10-28 — Milestone M1 completed
+- Initialized `server/` with Express, CORS, and dotenv using ES Modules.
+- Created minimal Express health check endpoint `GET /api/health` returning status, service, and timestamp.
+- Initialized `client/` using official Vite React template (`create-vite` v9.3.3) with React 19.
+- Added Axios and configured Tailwind CSS v4 with `@tailwindcss/vite` and `@import "tailwindcss";`.
+- Configured Vite dev server on port 3000 with `/api` proxy targeting `http://localhost:5000`.
+- Created minimal status UI in `client/src/App.jsx` styled with Tailwind utility classes.
+- Verified backend health endpoint directly on port 5000 and via Vite proxy on port 3000.
+- Verified frontend production build (`npm.cmd run build`) with zero errors.
+- Added `client/.env.example` and `server/.env.example`.
+- Confirmed zero skincare features, database connections, external APIs, or deployments.
+- Marked Milestone M1 as complete.
+
 ### 2026-10-28 — Milestone M0 completed
 - Verified Git repository status, Node.js (`v24.22.0`), and npm (`11.19.1`).
 - Created root `.gitignore` protecting root, client, and server `.env` files while allowing `.env.example` files to be committed.
