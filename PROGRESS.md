@@ -36,7 +36,7 @@ A client/server skincare application with user skin profile and goals, interacti
   - Verification: 0 syntax errors, 0 linter warnings (`oxlint`), production build in 253ms, live endpoint tests (401 on missing/bad token, 400 on invalid input, 503 on unconfigured DB).
 
 ### 2026-11-07 — Milestone M4 verified
-- Milestone M4 completed and committed (`08615c9`):
+- Milestone M4 completed and committed (`a39dde7`):
   - Product model (`server/src/models/Product.js`) with schema validation for category (`cleanser`, `toner`, `serum`, `treatment`, `moisturizer`, `sunscreen`, `mask`, `other`), routine time (`day`, `night`, `both`), automatic stepOrder mapping, openedDate, and PAO months.
   - Product controllers & REST routes (`server/src/controllers/productController.js`, `server/src/routes/productRoutes.js`) enforcing authenticated access and per-user data isolation.
   - Frontend Interactive Virtual Shelf (`client/src/components/ProductShelf.jsx`, `ProductCard.jsx`, `ProductModal.jsx`, `productConstants.js`):
@@ -46,24 +46,38 @@ A client/server skincare application with user skin profile and goals, interacti
     - Add/Edit/Delete product operations with form modal, validation, and real-time shelf refresh.
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint`), production build in 352ms, live endpoint security tests (401 on unauthorized access).
 
+### 2026-11-07 — Milestone M5 verified
+- Milestone M5 completed:
+  - Implemented backend product suggestion service (`server/src/services/geminiService.js`):
+    - Direct Google Gemini REST API integration using Node native `fetch` without adding heavy dependencies.
+    - Curated skincare knowledge base fallback covering 13+ popular skincare items (CeraVe, Paula's Choice BHA, The Ordinary, Anessa, La Roche-Posay, Skin1004, Klairs, Obagi, etc.) with keyword matching.
+    - Smart heuristic fallback with brand and active ingredient extraction when offline or API key is absent.
+    - Skincare safety constraint enforcement: sunscreens default to 'day', treatments containing AHA/BHA/Retinol default to 'night', auto-filled outputs clearly flagged as drafts with wellness disclaimers.
+  - Mounted protected endpoint `POST /api/products/suggest` in `server/src/routes/productRoutes.js` and `server/src/controllers/productController.js`.
+  - Frontend AI Auto-fill Assistant in `client/src/components/ProductModal.jsx`:
+    - Quick Auto-fill input bar with instant sample search chips (`🧴 BHA Paula's Choice`, `☀️ KCN Anessa Milk`, `💧 Serum HA The Ordinary`, `🧼 SRM CeraVe Foaming`, `🌿 Rau má Skin1004`, `🧴 Kem B5 La Roche-Posay`).
+    - Transparent draft disclaimer banner informing users that auto-filled fields are reviewable drafts.
+    - User remains in full control: all form fields (`name`, `brand`, `category`, `routineTime`, `paoMonths`, `activeIngredients`, `notes`) can be reviewed, edited, or expanded before saving to shelf.
+  - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 14 files), production build in 420ms, backend test suite confirming 401 unauthenticated block, 400 validation, catalog match, and heuristic parsing.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
 - [x] M2 — Configure environment variables, CORS, API integration and safe deployment smoke tests.
 - [x] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
 - [x] M4 — Product CRUD and interactive day/night virtual shelf.
-- [ ] M5 — Gemini-assisted product auto-fill with user review.
+- [x] M5 — Gemini-assisted product auto-fill with user review.
 - [ ] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
 - [ ] M7 — Daily check-in, product-use history, analytics and report caveats.
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M4 completed and committed (`08615c9`). Ready for planning Milestone M5.**
+**M5 completed. Ready for planning Milestone M6 (Weather/UV/AQI ingestion and rule-based daily routine suggestions).**
 
 ## Next actions
-1. Present M4 verification results and changed files for user review.
-2. Suggest a single, coherent Git commit message for Milestone M4.
-3. Await user approval before committing or planning Milestone M5.
+1. Present M5 verification results and changed files for user review.
+2. Commit Milestone M5 with a single, coherent commit message.
+3. Await user instructions before planning Milestone M6.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)
@@ -129,10 +143,23 @@ A client/server skincare application with user skin profile and goals, interacti
   - Ran `oxlint` across 14 source files: 0 warnings, 0 errors.
   - Ran `npm.cmd run build`: built production client bundle in 352ms without warnings or errors.
 
+### Milestone M5 (2026-11-07)
+- Backend syntax & logic verification:
+  - Passed `node --check` for `server/src/services/geminiService.js`, `server/src/controllers/productController.js`, `server/src/routes/productRoutes.js`, and `server/src/app.js` with exit code 0.
+- Live API endpoint verification (`POST /api/products/suggest`):
+  - Unauthenticated access: returned HTTP 401 with `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+  - Empty or single-character query: returned HTTP 400 with `{"error":{"message":"Tên hoặc từ khóa sản phẩm phải có ít nhất 2 ký tự.","status":400}}`.
+  - Curated catalog query (`paula choice bha`): returned HTTP 200 with `name: "Paula’s Choice Skin Perfecting 2% BHA Liquid Exfoliant"`, `category: "treatment"`, `routineTime: "night"`, `source: "catalog"`, `confidence: "high"`.
+  - Heuristic query (`kem chống nắng Biore UV Watery`): returned HTTP 200 with `brand: "Biore"`, `category: "sunscreen"`, `routineTime: "day"`, `source: "fallback"`.
+- Frontend code quality & build verification:
+  - Integrated AI auto-fill assistant bar and review disclaimer banner in `client/src/components/ProductModal.jsx`.
+  - Ran `oxlint` in `client/`: 0 warnings, 0 errors across 14 files.
+  - Ran `npm.cmd run build` in `client/`: built production bundle in 420ms without warnings or errors.
+
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
 - Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
-- Milestone M5 will introduce Google Gemini API called from backend for reviewable product draft auto-fill.
+- Milestone M6 will introduce Weather/UV/AQI provider ingestion and a deterministic rule-based skincare routine engine.
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
@@ -191,3 +218,11 @@ A client/server skincare application with user skin profile and goals, interacti
 - Integrated virtual shelf into `client/src/App.jsx` with Day ☀️ and Night 🌙 routine separation.
 - Verified 0 linter warnings, successful production build, and security checks.
 - Marked Milestone M4 as complete.
+
+### 2026-11-07 — Milestone M5 completed
+- Created `server/src/services/geminiService.js` supporting Google Gemini REST API integration with curated skincare catalog and smart heuristic fallbacks.
+- Added `POST /api/products/suggest` endpoint to `server/src/routes/productRoutes.js` and controller method in `server/src/controllers/productController.js`.
+- Updated `server/.env.example` with `GEMINI_API_KEY`.
+- Updated `client/src/components/ProductModal.jsx` with AI auto-fill bar, sample suggestion chips, and draft review disclaimer banner.
+- Verified 0 syntax errors, 0 linter warnings, successful production client build, and API integration tests.
+- Marked Milestone M5 as complete.

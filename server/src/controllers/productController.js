@@ -4,6 +4,7 @@ import Product, {
   CATEGORY_STEP_MAP,
 } from '../models/Product.js';
 import { isDbConnected } from '../db.js';
+import { suggestProductWithGemini } from '../services/geminiService.js';
 
 export async function getProducts(req, res, next) {
   try {
@@ -279,4 +280,29 @@ export async function deleteProduct(req, res, next) {
     return next(err);
   }
 }
+
+export async function suggestProduct(req, res, next) {
+  try {
+    const { query } = req.body || {};
+
+    if (!query || typeof query !== 'string' || query.trim().length < 2) {
+      return res.status(400).json({
+        error: {
+          message: 'Tên hoặc từ khóa sản phẩm phải có ít nhất 2 ký tự.',
+          status: 400,
+        },
+      });
+    }
+
+    const draft = await suggestProductWithGemini(query);
+
+    return res.status(200).json({
+      message: 'Product draft generated successfully',
+      draft,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 

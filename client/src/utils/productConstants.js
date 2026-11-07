@@ -15,3 +15,12 @@ export const ROUTINE_TIME_BADGES = {
   both: { label: '☀️🌙 Sáng & Tối', badge: 'bg-rose-100 text-rose-800 border-rose-200' },
 };
 
+export const SAMPLE_QUICK_SEARCHES = [
+  { label: '🧴 BHA Paula’s Choice', query: 'Paula’s Choice 2% BHA' },
+  { label: '☀️ KCN Anessa Milk', query: 'Anessa Perfect UV Sunscreen' },
+  { label: '💧 Serum HA The Ordinary', query: 'The Ordinary Hyaluronic Acid' },
+  { label: '🧼 SRM CeraVe Foaming', query: 'CeraVe Foaming Cleanser' },
+  { label: '🌿 Rau má Skin1004', query: 'Skin1004 Madagascar Centella' },
+  { label: '🧴 Kem B5 La Roche-Posay', query: 'La Roche-Posay Cicaplast Baume B5' },
+];
+

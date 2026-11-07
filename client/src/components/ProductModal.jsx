@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CATEGORY_CONFIG } from '../utils/productConstants';
+import { CATEGORY_CONFIG, SAMPLE_QUICK_SEARCHES } from '../utils/productConstants';
+import api from '../services/api';
 
 const CATEGORIES = [
   { id: 'cleanser', label: 'Sữa rửa mặt / Làm sạch', emoji: '🧼' },
@@ -37,6 +38,51 @@ function ProductForm({ productToEdit, onClose, onSave }) {
   const [notes, setNotes] = useState(() => productToEdit?.notes || '');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-fill state
+  const [suggestQuery, setSuggestQuery] = useState('');
+  const [suggesting, setSuggesting] = useState(false);
+  const [draftMeta, setDraftMeta] = useState(null);
+
+  const handleAutoFill = async (customQuery) => {
+    const q = (typeof customQuery === 'string' ? customQuery : suggestQuery).trim();
+    if (!q || q.length < 2) {
+      setError('Vui lòng nhập ít nhất 2 ký tự tên hoặc thương hiệu sản phẩm.');
+      return;
+    }
+
+    setError(null);
+    setSuggesting(true);
+    try {
+      const res = await api.post('/products/suggest', { query: q });
+      const draft = res.data?.draft;
+      if (draft) {
+        if (draft.name) setName(draft.name);
+        if (draft.brand) setBrand(draft.brand);
+        if (draft.category) setCategory(draft.category);
+        if (draft.routineTime) setRoutineTime(draft.routineTime);
+        if (draft.paoMonths) setPaoMonths(draft.paoMonths);
+        if (Array.isArray(draft.activeIngredients)) {
+          setActiveIngredients(draft.activeIngredients.join(', '));
+        }
+        if (draft.notes) setNotes(draft.notes);
+
+        setDraftMeta({
+          source: draft.source,
+          confidence: draft.confidence,
+          disclaimer: draft.disclaimer,
+        });
+      }
+    } catch (err) {
+      const msg =
+        err.response?.data?.error?.message ||
+        err.message ||
+        'Không thể tải gợi ý tự động. Bạn vẫn có thể tự điền thông tin bên dưới.';
+      setError(msg);
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,6 +156,100 @@ function ProductForm({ productToEdit, onClose, onSave }) {
           <div className="rounded-2xl bg-rose-50 border border-rose-200 p-3 text-rose-700 text-xs font-semibold flex items-center space-x-2">
             <span>⚠️</span>
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* AI Auto-fill Assistant Bar */}
+        <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-50/80 via-purple-50/50 to-pink-50/70 border border-indigo-100/90 shadow-2xs">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center space-x-1.5">
+              <span>⚡</span>
+              <span>Gợi ý tự động (AI Auto-fill)</span>
+            </label>
+            <span className="text-[10px] font-semibold text-indigo-600 bg-white/80 px-2 py-0.5 rounded-full border border-indigo-100">
+              Bản nháp thông minh
+            </span>
+          </div>
+          <p className="text-[11px] text-indigo-800/80 mb-2.5">
+            Nhập tên mỹ phẩm của bạn để tự động điền phân loại, hoạt chất và hạn mở nắp.
+          </p>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={suggestQuery}
+              onChange={(e) => setSuggestQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAutoFill();
+                }
+              }}
+              placeholder="VD: Paula's Choice BHA, KCN Anessa, CeraVe..."
+              className="flex-1 px-3.5 py-2 rounded-xl border border-indigo-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400 bg-white"
+            />
+            <button
+              type="button"
+              onClick={() => handleAutoFill()}
+              disabled={suggesting}
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs hover:shadow-sm transition disabled:opacity-50 cursor-pointer flex items-center space-x-1 shrink-0"
+            >
+              {suggesting ? (
+                <>
+                  <span className="inline-block animate-spin">⏳</span>
+                  <span>Đang tìm...</span>
+                </>
+              ) : (
+                <>
+                  <span>✨</span>
+                  <span>Điền nhanh</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Quick chips */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2 border-t border-indigo-100/60">
+            <span className="text-[10px] font-bold text-indigo-500">Mẫu:</span>
+            {SAMPLE_QUICK_SEARCHES.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => {
+                  setSuggestQuery(item.query);
+                  handleAutoFill(item.query);
+                }}
+                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-white/90 hover:bg-white text-indigo-700 border border-indigo-200/60 hover:border-indigo-300 transition shadow-2xs cursor-pointer"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Draft Disclaimer & User Review Banner */}
+        {draftMeta && (
+          <div className="rounded-2xl bg-amber-50/90 border border-amber-200/80 p-3.5 space-y-1 text-slate-800 text-xs animate-in fade-in duration-200">
+            <div className="flex items-center justify-between font-bold text-amber-900">
+              <span className="flex items-center space-x-1.5">
+                <span>✨</span>
+                <span>
+                  Bản nháp gợi ý tự động (
+                  {draftMeta.source === 'catalog'
+                    ? 'Thư viện mỹ phẩm chuẩn'
+                    : draftMeta.source === 'gemini'
+                    ? 'Gemini Skincare AI'
+                    : 'Từ khóa phân tích'}
+                  )
+                </span>
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 font-extrabold uppercase">
+                {draftMeta.confidence === 'high' ? 'Độ khớp cao' : 'Bản nháp dự thảo'}
+              </span>
+            </div>
+            <p className="text-slate-600 leading-relaxed text-[11px]">
+              {draftMeta.disclaimer ||
+                'Thông tin đã được điền sẵn vào các trường bên dưới. Bạn hoàn toàn có thể chỉnh sửa tự do trước khi lưu vào kệ.'}
+            </p>
           </div>
         )}
 
