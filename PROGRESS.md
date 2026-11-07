@@ -128,6 +128,24 @@ A client/server skincare application with user skin profile and goals, interacti
     - Added quick-login button: *"⚡ Đăng nhập nhanh với tài khoản Demo (demo@glow.vn)"* allowing instant testing without database configuration.
   - Verification: Node.js syntax checked, automated Node test suite verified login, getProducts, createProduct, updateProduct, deleteProduct, and oxlint passed with 0 warnings/0 errors.
 
+### 2026-11-07 — Supabase Cloud Database Integration verified
+- Supabase Integration & Dual-Cloud Architecture completed:
+  - PostgreSQL Schema Migration (`server/src/db/supabase-schema.sql`):
+    - Created DDL schema with 3 relational tables: `users` (with JSONB `skin_profile`), `products` (shelf categories, PAO, active ingredients array), and `check_ins` (ratings 1–5, feelings, unique constraint on `(user_id, date, routine_type)`).
+    - Included pre-seeded demo user and 5 curated day/night skincare products.
+  - Supabase Client Module (`server/src/supabase.js`):
+    - Configured `@supabase/supabase-js` initialization reading `SUPABASE_URL` and `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`.
+    - Added helper `isSupabaseConfigured()` enabling dual-cloud capability (Supabase -> MongoDB Atlas -> in-memory fallback).
+  - Controller Adapters:
+    - `authController.js`: Supabase queries for `register`, `login`, `getMe`, and `updateSkinProfile`.
+    - `productController.js`: Supabase CRUD operations for `getProducts`, `getProductById`, `createProduct`, `updateProduct`, and `deleteProduct`.
+    - `checkInController.js`: Supabase upsert for `createCheckIn`, `getTodayCheckIn`, `getCheckInHistory`, and `getCheckInReport`.
+    - `gamificationController.js`: Supabase queries for streak calculations, radiance points, and 6 badges evaluation.
+    - `middlewares/auth.js`: Supabase user token verification.
+  - Environment Configuration:
+    - Updated `server/.env.example` with Supabase project credentials.
+  - Verification: 0 syntax errors across all server files (`node --check`), automated Node dual-cloud test suite passed, `oxlint` 0 warnings/0 errors, client build completed in 357ms.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
@@ -139,14 +157,15 @@ A client/server skincare application with user skin profile and goals, interacti
 - [x] M7 — Daily check-in, product-use history, analytics and report caveats.
 - [x] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 - [x] Offline Demo Mode — In-memory demo test account and full offline shelf support for immediate testing without MongoDB Atlas.
+- [x] Supabase Cloud Database — Supabase PostgreSQL integration with dual-cloud fallback and SQL migration script.
 
 ## Current focus
-**Full application complete with offline test account (`demo@glow.vn`) ready for testing.**
+**Full application with Supabase integration ready for testing with or without database credentials.**
 
 ## Next actions
-1. Present demo account credentials and offline testing capabilities to the user.
-2. Commit with a clean message following Git conventions.
-3. Push all commits to GitHub when requested.
+1. Guide user on how to run `supabase-schema.sql` on Supabase Dashboard and add `.env` keys.
+2. Commit changes with a clean commit message upon user approval.
+3. Push to GitHub when requested.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)

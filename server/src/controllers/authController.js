@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { isDbConnected } from '../db.js';
 import { JWT_SECRET } from '../middlewares/auth.js';
+import { supabase, isSupabaseConfigured } from '../supabase.js';
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 const ALLOWED_SKIN_TYPES = ['oily', 'dry', 'combination', 'normal', 'sensitive'];
@@ -58,71 +59,139 @@ export async function register(req, res, next) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    if (!isDbConnected()) {
-      const userPayload = {
-        _id: '507f1f77bcf86cd799439011',
-        name: name.trim(),
-        email: normalizedEmail,
-        skinProfile: {
-          skinType: 'normal',
-          concerns: [],
-          goals: [],
-          sensitivityLevel: 'medium',
-          isOnboarded: false,
-        },
-        createdAt: new Date(),
+    // 1. Supabase Cloud Database path
+    if (isSupabaseConfigured()) {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      if (existingUser) {
+        return res.status(400).json({
+          error: {
+            message: 'An account with this email address already exists.',
+            status: 400,
+          },
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          name: name.trim(),
+          email: normalizedEmail,
+          password_hash: hashedPassword,
+          skin_profile: {
+            skinType: 'normal',
+            concerns: [],
+            goals: [],
+            sensitivityLevel: 'medium',
+            isOnboarded: false,
+          },
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      const user = {
+        _id: newUser.id,
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        skinProfile: newUser.skin_profile,
+        createdAt: newUser.created_at,
       };
-      currentDemoUser = userPayload;
 
       const token = jwt.sign(
         {
-          id: userPayload._id,
-          email: userPayload.email,
-          name: userPayload.name,
-          skinProfile: userPayload.skinProfile,
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          skinProfile: user.skinProfile,
         },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
 
       return res.status(201).json({
-        message: 'Registration successful (chế độ demo offline)',
+        message: 'Registration successful',
         token,
-        user: userPayload,
-        isDemo: true,
+        user,
       });
     }
 
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    // 2. MongoDB Atlas path
+    if (isDbConnected()) {
+      const existingUser = await User.findOne({ email: normalizedEmail });
 
-    if (existingUser) {
-      return res.status(400).json({
-        error: {
-          message: 'An account with this email address already exists.',
-          status: 400,
-        },
+      if (existingUser) {
+        return res.status(400).json({
+          error: {
+            message: 'An account with this email address already exists.',
+            status: 400,
+          },
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const user = await User.create({
+        name: name.trim(),
+        email: normalizedEmail,
+        password: hashedPassword,
+      });
+
+      const token = jwt.sign(
+        { id: user._id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.status(201).json({
+        message: 'Registration successful',
+        token,
+        user,
       });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({
+    // 3. Offline in-memory fallback
+    const userPayload = {
+      _id: '507f1f77bcf86cd799439011',
       name: name.trim(),
       email: normalizedEmail,
-      password: hashedPassword,
-    });
+      skinProfile: {
+        skinType: 'normal',
+        concerns: [],
+        goals: [],
+        sensitivityLevel: 'medium',
+        isOnboarded: false,
+      },
+      createdAt: new Date(),
+    };
+    currentDemoUser = userPayload;
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      {
+        id: userPayload._id,
+        email: userPayload.email,
+        name: userPayload.name,
+        skinProfile: userPayload.skinProfile,
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     return res.status(201).json({
-      message: 'Registration successful',
+      message: 'Registration successful (chế độ demo offline)',
       token,
-      user,
+      user: userPayload,
+      isDemo: true,
     });
   } catch (err) {
     return next(err);
@@ -144,75 +213,157 @@ export async function login(req, res, next) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Allow instant demo login or offline login without requiring MongoDB
-    if (normalizedEmail === 'demo@glow.vn' || !isDbConnected()) {
-      const userPayload = {
-        ...currentDemoUser,
-        email: normalizedEmail === 'demo@glow.vn' ? 'demo@glow.vn' : normalizedEmail,
-        name:
-          normalizedEmail === 'demo@glow.vn'
-            ? currentDemoUser.name
-            : normalizedEmail.split('@')[0] || 'Tô Huyền Châu',
+    // 1. Supabase Cloud Database path
+    if (isSupabaseConfigured()) {
+      const { data: userRecord, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      if (!userRecord || userError) {
+        return res.status(401).json({
+          error: {
+            message: 'Invalid email or password.',
+            status: 401,
+          },
+        });
+      }
+
+      const isMatch = await bcrypt.compare(password, userRecord.password_hash);
+      if (!isMatch) {
+        return res.status(401).json({
+          error: {
+            message: 'Invalid email or password.',
+            status: 401,
+          },
+        });
+      }
+
+      const user = {
+        _id: userRecord.id,
+        id: userRecord.id,
+        name: userRecord.name,
+        email: userRecord.email,
+        skinProfile: userRecord.skin_profile,
+        createdAt: userRecord.created_at,
       };
 
       const token = jwt.sign(
         {
-          id: userPayload._id,
-          email: userPayload.email,
-          name: userPayload.name,
-          skinProfile: userPayload.skinProfile,
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          skinProfile: user.skinProfile,
         },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
 
       return res.status(200).json({
-        message: 'Login successful (tài khoản demo offline)',
+        message: 'Login successful',
         token,
-        user: userPayload,
-        isDemo: true,
+        user,
       });
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    // 2. MongoDB Atlas path
+    if (isDbConnected()) {
+      const user = await User.findOne({ email: normalizedEmail });
 
-    if (!user) {
-      return res.status(401).json({
-        error: {
-          message: 'Invalid email or password.',
-          status: 401,
-        },
+      if (!user) {
+        return res.status(401).json({
+          error: {
+            message: 'Invalid email or password.',
+            status: 401,
+          },
+        });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({
+          error: {
+            message: 'Invalid email or password.',
+            status: 401,
+          },
+        });
+      }
+
+      const token = jwt.sign(
+        { id: user._id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.status(200).json({
+        message: 'Login successful',
+        token,
+        user,
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        error: {
-          message: 'Invalid email or password.',
-          status: 401,
-        },
-      });
-    }
+    // 3. Instant demo login or offline login without requiring database
+    const userPayload = {
+      ...currentDemoUser,
+      email: normalizedEmail === 'demo@glow.vn' ? 'demo@glow.vn' : normalizedEmail,
+      name:
+        normalizedEmail === 'demo@glow.vn'
+          ? currentDemoUser.name
+          : normalizedEmail.split('@')[0] || 'Tô Huyền Châu',
+    };
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      {
+        id: userPayload._id,
+        email: userPayload.email,
+        name: userPayload.name,
+        skinProfile: userPayload.skinProfile,
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     return res.status(200).json({
-      message: 'Login successful',
+      message: 'Login successful (tài khoản demo offline)',
       token,
-      user,
+      user: userPayload,
+      isDemo: true,
     });
   } catch (err) {
     return next(err);
   }
 }
 
-export function getMe(req, res) {
-  if (!isDbConnected()) {
+export async function getMe(req, res, next) {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data: userRecord } = await supabase
+        .from('users')
+        .select('id, name, email, skin_profile, created_at')
+        .eq('id', req.user._id || req.user.id)
+        .maybeSingle();
+
+      if (userRecord) {
+        return res.status(200).json({
+          user: {
+            _id: userRecord.id,
+            id: userRecord.id,
+            name: userRecord.name,
+            email: userRecord.email,
+            skinProfile: userRecord.skin_profile,
+            createdAt: userRecord.created_at,
+          },
+        });
+      }
+    }
+
+    if (isDbConnected()) {
+      return res.status(200).json({
+        user: req.user,
+      });
+    }
+
     return res.status(200).json({
       user: {
         ...currentDemoUser,
@@ -221,11 +372,9 @@ export function getMe(req, res) {
       },
       isDemo: true,
     });
+  } catch (err) {
+    return next(err);
   }
-
-  return res.status(200).json({
-    user: req.user,
-  });
 }
 
 export async function updateSkinProfile(req, res, next) {
@@ -250,53 +399,98 @@ export async function updateSkinProfile(req, res, next) {
       });
     }
 
-    if (!isDbConnected()) {
-      currentDemoUser.skinProfile = {
-        skinType: skinType || currentDemoUser.skinProfile?.skinType || 'normal',
+    // 1. Supabase Cloud Database path
+    if (isSupabaseConfigured()) {
+      const updatedProfile = {
+        skinType: skinType || req.user.skinProfile?.skinType || 'normal',
         concerns: Array.isArray(concerns)
           ? concerns
-          : currentDemoUser.skinProfile?.concerns || [],
+          : req.user.skinProfile?.concerns || [],
         goals: Array.isArray(goals)
           ? goals
-          : currentDemoUser.skinProfile?.goals || [],
+          : req.user.skinProfile?.goals || [],
         sensitivityLevel:
           sensitivityLevel ||
-          currentDemoUser.skinProfile?.sensitivityLevel ||
+          req.user.skinProfile?.sensitivityLevel ||
           'medium',
         isOnboarded: true,
       };
 
-      return res.status(200).json({
-        message: 'Skin profile updated successfully (chế độ demo offline)',
-        user: currentDemoUser,
-        isDemo: true,
-      });
-    }
+      const { data: updatedRecord, error: updateErr } = await supabase
+        .from('users')
+        .update({
+          skin_profile: updatedProfile,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', req.user._id || req.user.id)
+        .select()
+        .single();
 
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({
-        error: {
-          message: 'User account not found.',
-          status: 404,
+      if (updateErr) throw updateErr;
+
+      return res.status(200).json({
+        message: 'Skin profile updated successfully',
+        user: {
+          _id: updatedRecord.id,
+          id: updatedRecord.id,
+          name: updatedRecord.name,
+          email: updatedRecord.email,
+          skinProfile: updatedRecord.skin_profile,
         },
       });
     }
 
-    user.skinProfile = {
-      skinType: skinType || user.skinProfile?.skinType || 'normal',
-      concerns: Array.isArray(concerns) ? concerns : user.skinProfile?.concerns || [],
-      goals: Array.isArray(goals) ? goals : user.skinProfile?.goals || [],
+    // 2. MongoDB Atlas path
+    if (isDbConnected()) {
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return res.status(404).json({
+          error: {
+            message: 'User account not found.',
+            status: 404,
+          },
+        });
+      }
+
+      user.skinProfile = {
+        skinType: skinType || user.skinProfile?.skinType || 'normal',
+        concerns: Array.isArray(concerns)
+          ? concerns
+          : user.skinProfile?.concerns || [],
+        goals: Array.isArray(goals) ? goals : user.skinProfile?.goals || [],
+        sensitivityLevel:
+          sensitivityLevel || user.skinProfile?.sensitivityLevel || 'medium',
+        isOnboarded: true,
+      };
+
+      await user.save();
+
+      return res.status(200).json({
+        message: 'Skin profile updated successfully',
+        user,
+      });
+    }
+
+    // 3. Offline in-memory fallback
+    currentDemoUser.skinProfile = {
+      skinType: skinType || currentDemoUser.skinProfile?.skinType || 'normal',
+      concerns: Array.isArray(concerns)
+        ? concerns
+        : currentDemoUser.skinProfile?.concerns || [],
+      goals: Array.isArray(goals)
+        ? goals
+        : currentDemoUser.skinProfile?.goals || [],
       sensitivityLevel:
-        sensitivityLevel || user.skinProfile?.sensitivityLevel || 'medium',
+        sensitivityLevel ||
+        currentDemoUser.skinProfile?.sensitivityLevel ||
+        'medium',
       isOnboarded: true,
     };
 
-    await user.save();
-
     return res.status(200).json({
-      message: 'Skin profile updated successfully',
-      user,
+      message: 'Skin profile updated successfully (chế độ demo offline)',
+      user: currentDemoUser,
+      isDemo: true,
     });
   } catch (err) {
     return next(err);

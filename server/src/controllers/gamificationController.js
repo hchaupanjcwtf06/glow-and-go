@@ -2,6 +2,7 @@ import CheckIn from '../models/CheckIn.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 import { isDbConnected } from '../db.js';
+import { supabase, isSupabaseConfigured } from '../supabase.js';
 import { DEMO_SHELF_PRODUCTS } from '../services/routineEngine.js';
 
 // Predefined Skincare Achievements & Badges definition
@@ -143,7 +144,33 @@ export async function getGamificationBadges(req, res, next) {
     let isOnboarded = true;
     let isDemo = false;
 
-    if (isDbConnected()) {
+    if (isSupabaseConfigured()) {
+      const [checkInsRes, productsRes, userRes] = await Promise.all([
+        supabase
+          .from('check_ins')
+          .select('date, routine_type, feelings')
+          .eq('user_id', req.user._id || req.user.id),
+        supabase
+          .from('products')
+          .select('*')
+          .eq('user_id', req.user._id || req.user.id),
+        supabase
+          .from('users')
+          .select('skin_profile')
+          .eq('id', req.user._id || req.user.id)
+          .maybeSingle(),
+      ]);
+
+      checkInDates = (checkInsRes.data || []).map((c) => c.date);
+      products = (productsRes.data || []).map((p) => ({
+        _id: p.id,
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        activeIngredients: p.active_ingredients || [],
+      }));
+      isOnboarded = Boolean(userRes.data?.skin_profile?.isOnboarded);
+    } else if (isDbConnected()) {
       const [checkIns, dbProducts, user] = await Promise.all([
         CheckIn.find({ userId: req.user._id }).select('date routineType feelings'),
         Product.find({ userId: req.user._id }),

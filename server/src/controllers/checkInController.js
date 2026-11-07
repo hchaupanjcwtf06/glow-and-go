@@ -1,5 +1,6 @@
 import CheckIn, { ALLOWED_FEELINGS } from '../models/CheckIn.js';
 import { isDbConnected } from '../db.js';
+import { supabase, isSupabaseConfigured } from '../supabase.js';
 
 // Pre-populated sample records for immediate demo & offline resilience
 const createSampleHistory = () => {
@@ -81,7 +82,7 @@ export async function createCheckIn(req, res, next) {
       : [];
 
     const recordData = {
-      userId: req.user._id,
+      userId: req.user._id || req.user.id,
       date,
       routineType: ['day', 'night', 'both'].includes(routineType)
         ? routineType
@@ -99,8 +100,51 @@ export async function createCheckIn(req, res, next) {
       },
     };
 
+    // 1. Supabase Cloud Database path
+    if (isSupabaseConfigured()) {
+      const { data: ci, error } = await supabase
+        .from('check_ins')
+        .upsert(
+          {
+            user_id: req.user._id || req.user.id,
+            date,
+            routine_type: recordData.routineType,
+            rating: numRating,
+            feelings: cleanFeelings,
+            completed_steps_count: Number(completedStepsCount) || 0,
+            notes: String(notes || '').trim().slice(0, 300),
+            environmental_context: recordData.environmentalContext,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,date,routine_type' }
+        )
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const checkIn = {
+        _id: ci.id,
+        id: ci.id,
+        userId: ci.user_id,
+        date: ci.date,
+        routineType: ci.routine_type,
+        rating: ci.rating,
+        feelings: ci.feelings,
+        completedStepsCount: ci.completed_steps_count,
+        notes: ci.notes,
+        environmentalContext: ci.environmental_context,
+        createdAt: ci.created_at,
+      };
+
+      return res.status(201).json({
+        message: 'Lưu nhật ký check-in thành công!',
+        checkIn,
+      });
+    }
+
+    // 2. MongoDB Atlas path
     if (isDbConnected()) {
-      // Upsert check-in for the same user, date, and routineType
       const checkIn = await CheckIn.findOneAndUpdate(
         { userId: req.user._id, date, routineType: recordData.routineType },
         recordData,
@@ -113,7 +157,7 @@ export async function createCheckIn(req, res, next) {
       });
     }
 
-    // In-memory fallback
+    // 3. Offline in-memory fallback
     const newRecord = {
       _id: `mem-${Date.now()}`,
       ...recordData,
@@ -139,6 +183,40 @@ export async function getTodayCheckIn(req, res, next) {
     const todayStr = getTodayString();
     const { routineType = 'day' } = req.query;
 
+    // 1. Supabase Cloud Database path
+    if (isSupabaseConfigured()) {
+      const { data: ci, error } = await supabase
+        .from('check_ins')
+        .select('*')
+        .eq('user_id', req.user._id || req.user.id)
+        .eq('date', todayStr)
+        .eq('routine_type', routineType)
+        .maybeSingle();
+
+      const checkIn = ci
+        ? {
+            _id: ci.id,
+            id: ci.id,
+            userId: ci.user_id,
+            date: ci.date,
+            routineType: ci.routine_type,
+            rating: ci.rating,
+            feelings: ci.feelings,
+            completedStepsCount: ci.completed_steps_count,
+            notes: ci.notes,
+            environmentalContext: ci.environmental_context,
+            createdAt: ci.created_at,
+          }
+        : null;
+
+      return res.status(200).json({
+        hasCheckedIn: Boolean(checkIn),
+        checkIn,
+        date: todayStr,
+      });
+    }
+
+    // 2. MongoDB Atlas path
     if (isDbConnected()) {
       const checkIn = await CheckIn.findOne({
         userId: req.user._id,
@@ -153,7 +231,7 @@ export async function getTodayCheckIn(req, res, next) {
       });
     }
 
-    // In-memory search
+    // 3. Offline in-memory search
     const checkIn = inMemoryCheckIns.find(
       (c) => c.date === todayStr && c.routineType === routineType
     );
@@ -176,6 +254,38 @@ export async function getCheckInHistory(req, res, next) {
   try {
     const limit = Math.min(30, Math.max(1, Number(req.query.limit) || 14));
 
+    // 1. Supabase Cloud Database path
+    if (isSupabaseConfigured()) {
+      const { data: records, error } = await supabase
+        .from('check_ins')
+        .select('*')
+        .eq('user_id', req.user._id || req.user.id)
+        .order('date', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      const checkIns = (records || []).map((ci) => ({
+        _id: ci.id,
+        id: ci.id,
+        userId: ci.user_id,
+        date: ci.date,
+        routineType: ci.routine_type,
+        rating: ci.rating,
+        feelings: ci.feelings,
+        completedStepsCount: ci.completed_steps_count,
+        notes: ci.notes,
+        environmentalContext: ci.environmental_context,
+        createdAt: ci.created_at,
+      }));
+
+      return res.status(200).json({
+        count: checkIns.length,
+        checkIns,
+      });
+    }
+
+    // 2. MongoDB Atlas path
     if (isDbConnected()) {
       const checkIns = await CheckIn.find({ userId: req.user._id })
         .sort({ date: -1, createdAt: -1 })
@@ -187,6 +297,7 @@ export async function getCheckInHistory(req, res, next) {
       });
     }
 
+    // 3. Offline in-memory fallback
     const checkIns = inMemoryCheckIns.slice(0, limit);
     return res.status(200).json({
       count: checkIns.length,
@@ -206,7 +317,32 @@ export async function getCheckInReport(req, res, next) {
   try {
     let records = [];
 
-    if (isDbConnected()) {
+    // 1. Supabase Cloud Database path
+    if (isSupabaseConfigured()) {
+      const { data: dbRecords, error } = await supabase
+        .from('check_ins')
+        .select('*')
+        .eq('user_id', req.user._id || req.user.id)
+        .order('date', { ascending: true });
+
+      if (dbRecords && dbRecords.length > 0) {
+        records = dbRecords.map((ci) => ({
+          _id: ci.id,
+          id: ci.id,
+          userId: ci.user_id,
+          date: ci.date,
+          routineType: ci.routine_type,
+          rating: ci.rating,
+          feelings: ci.feelings,
+          completedStepsCount: ci.completed_steps_count,
+          notes: ci.notes,
+          environmentalContext: ci.environmental_context,
+          createdAt: ci.created_at,
+        }));
+      } else {
+        records = inMemoryCheckIns;
+      }
+    } else if (isDbConnected()) {
       records = await CheckIn.find({ userId: req.user._id }).sort({ date: 1 });
       if (!records || records.length === 0) {
         records = inMemoryCheckIns;
@@ -228,7 +364,7 @@ export async function getCheckInReport(req, res, next) {
           disclaimer:
             'Chưa có dữ liệu check-in. Hãy ghi nhận nhật ký sau mỗi routine để theo dõi tiến trình.',
         },
-        isDemo: !isDbConnected(),
+        isDemo: !isDbConnected() && !isSupabaseConfigured(),
       });
     }
 
@@ -279,10 +415,9 @@ export async function getCheckInReport(req, res, next) {
         recentTrend,
         disclaimer: `Lưu ý khoa học: Báo cáo xu hướng được tổng hợp từ cảm nhận chủ quan do người dùng tự ghi nhận (cỡ mẫu N=${sampleSize} lượt check-in). Đây là công cụ hỗ trợ theo dõi thói quen chăm sóc da, không phải bằng chứng lâm sàng chứng minh một sản phẩm cụ thể gây ra sự cải thiện da.`,
       },
-      isDemo: !isDbConnected(),
+      isDemo: !isDbConnected() && !isSupabaseConfigured(),
     });
   } catch (err) {
     return next(err);
   }
 }
-
