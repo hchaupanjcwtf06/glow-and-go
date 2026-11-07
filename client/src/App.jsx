@@ -4,6 +4,7 @@ import { useAuth } from './context/useAuth';
 import AuthModal from './components/AuthModal';
 import OnboardingModal from './components/OnboardingModal';
 import SkinProfileCard from './components/SkinProfileCard';
+import ProductShelf from './components/ProductShelf';
 import api from './services/api';
 
 function AppContent() {
@@ -49,7 +50,7 @@ function AppContent() {
                   Glow &amp; Go
                 </span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-rose-100 text-rose-600">
-                  v0.3
+                  v0.4
                 </span>
               </div>
               <p className="text-[11px] font-semibold text-slate-400">
@@ -232,42 +233,16 @@ function AppContent() {
                 </button>
               </div>
             ) : (
-              <SkinProfileCard
-                user={user}
-                onEdit={() => setIsOnboardingOpen(true)}
-              />
+              <>
+                <SkinProfileCard
+                  user={user}
+                  onEdit={() => setIsOnboardingOpen(true)}
+                />
+
+                {/* Milestone M4 Virtual Shelf */}
+                <ProductShelf />
+              </>
             )}
-
-            {/* Upcoming Milestone M4 Shelf Preview Teaser */}
-            <div className="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-rose-100">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-2xl text-white shadow-md shadow-indigo-200">
-                    🧴
-                  </div>
-                  <div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-100 text-indigo-700">
-                      Sắp có tại Milestone M4
-                    </span>
-                    <h4 className="text-base sm:text-lg font-black text-slate-900 mt-1">
-                      Kệ mỹ phẩm ảo Ngày &amp; Đêm (Virtual Shelf)
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Sắp xếp và quản lý các chai lọ skincare theo từng bước sáng / tối trực quan.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/70">
-                    ☀️ Kệ ban ngày
-                  </span>
-                  <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200/70">
-                    🌙 Kệ ban đêm
-                  </span>
-                </div>
-              </div>
-            </div>
           </section>
         )}
 

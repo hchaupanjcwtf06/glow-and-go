@@ -35,24 +35,35 @@ A client/server skincare application with user skin profile and goals, interacti
   - Frontend React 19 AuthContext, Axios interceptor for JWT injection, AuthModal (Login/Register), OnboardingModal (Skin Survey), and SkinProfileCard.
   - Verification: 0 syntax errors, 0 linter warnings (`oxlint`), production build in 253ms, live endpoint tests (401 on missing/bad token, 400 on invalid input, 503 on unconfigured DB).
 
+### 2026-11-07 — Milestone M4 verified
+- Milestone M4 completed and committed (`08615c9`):
+  - Product model (`server/src/models/Product.js`) with schema validation for category (`cleanser`, `toner`, `serum`, `treatment`, `moisturizer`, `sunscreen`, `mask`, `other`), routine time (`day`, `night`, `both`), automatic stepOrder mapping, openedDate, and PAO months.
+  - Product controllers & REST routes (`server/src/controllers/productController.js`, `server/src/routes/productRoutes.js`) enforcing authenticated access and per-user data isolation.
+  - Frontend Interactive Virtual Shelf (`client/src/components/ProductShelf.jsx`, `ProductCard.jsx`, `ProductModal.jsx`, `productConstants.js`):
+    - Separated Morning Shelf ☀️, Evening Shelf 🌙, and All Products 📦 tabs.
+    - Automatic ordering by skincare routine step sequence.
+    - Period After Opening (PAO) tracker calculating months elapsed and warning if expired.
+    - Add/Edit/Delete product operations with form modal, validation, and real-time shelf refresh.
+  - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint`), production build in 352ms, live endpoint security tests (401 on unauthorized access).
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
 - [x] M2 — Configure environment variables, CORS, API integration and safe deployment smoke tests.
 - [x] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
-- [ ] M4 — Product CRUD and interactive day/night virtual shelf.
+- [x] M4 — Product CRUD and interactive day/night virtual shelf.
 - [ ] M5 — Gemini-assisted product auto-fill with user review.
 - [ ] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
 - [ ] M7 — Daily check-in, product-use history, analytics and report caveats.
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M3 completed and committed (`a7a5602`). Ready for planning Milestone M4.**
+**M4 completed and committed (`08615c9`). Ready for planning Milestone M5.**
 
 ## Next actions
-1. Present M3 verification results and changed files for user review.
-2. Suggest a single, coherent Git commit message for Milestone M3.
-3. Await user approval before committing or planning Milestone M4.
+1. Present M4 verification results and changed files for user review.
+2. Suggest a single, coherent Git commit message for Milestone M4.
+3. Await user approval before committing or planning Milestone M5.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)
@@ -106,10 +117,22 @@ A client/server skincare application with user skin profile and goals, interacti
   - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all 10 source files.
   - Executed `npm.cmd run build` in `client/`: built production bundle in 253ms without errors.
 
+### Milestone M4 (2026-11-07)
+- Backend syntax verification:
+  - Passed `node --check` for `server/src/models/Product.js`, `server/src/controllers/productController.js`, `server/src/routes/productRoutes.js`, and `server/src/app.js` with exit code 0.
+- Live API endpoint & Security verification:
+  - `GET http://localhost:5000/api/products` without token: returned HTTP 401 `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+  - `POST http://localhost:5000/api/products` without token: returned HTTP 401 `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+  - `DELETE http://localhost:5000/api/products/12345` without token: returned HTTP 401 `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+- Frontend code quality & build verification:
+  - Created `client/src/utils/productConstants.js`, `client/src/components/ProductCard.jsx`, `client/src/components/ProductModal.jsx`, and `client/src/components/ProductShelf.jsx`.
+  - Ran `oxlint` across 14 source files: 0 warnings, 0 errors.
+  - Ran `npm.cmd run build`: built production client bundle in 352ms without warnings or errors.
+
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
 - Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
-- Milestone M3 completed: MongoDB Atlas connection string (`MONGODB_URI`) can be set in `server/.env` when connecting to active Atlas cluster.
+- Milestone M5 will introduce Google Gemini API called from backend for reviewable product draft auto-fill.
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
@@ -160,3 +183,11 @@ A client/server skincare application with user skin profile and goals, interacti
 - Updated `client/src/App.jsx` to provide interactive authentication flow and onboarding completion.
 - Verified all endpoints with `Invoke-RestMethod`, verified `oxlint` (0 errors, 0 warnings), and verified `npm.cmd run build` (253ms).
 - Marked Milestone M3 as complete.
+
+### 2026-11-07 — Milestone M4 completed
+- Created `server/src/models/Product.js` with category mapping, routineTime, openedDate, and PAO months.
+- Implemented `server/src/controllers/productController.js` and `server/src/routes/productRoutes.js` for authenticated product CRUD.
+- Created `client/src/utils/productConstants.js`, `client/src/components/ProductCard.jsx`, `client/src/components/ProductModal.jsx`, and `client/src/components/ProductShelf.jsx`.
+- Integrated virtual shelf into `client/src/App.jsx` with Day ☀️ and Night 🌙 routine separation.
+- Verified 0 linter warnings, successful production build, and security checks.
+- Marked Milestone M4 as complete.

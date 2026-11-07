@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { isDbConnected } from './db.js';
 import authRoutes from './routes/authRoutes.js';
+import productRoutes from './routes/productRoutes.js';
 
 const app = express();
 
@@ -38,6 +39,9 @@ app.get('/api/health', (req, res) => {
 
 // Authentication and user profile routes
 app.use('/api/auth', authRoutes);
+
+// Product and virtual shelf routes
+app.use('/api/products', productRoutes);
 
 // Handle 404 for unknown routes
 app.use((req, res) => {
