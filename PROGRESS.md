@@ -9,16 +9,27 @@ A client/server skincare application with user skin profile and goals, interacti
 - Database: MongoDB Atlas.
 - External services (to evaluate): Weather/UV/AQI provider, Gemini API called from backend.
 
-## Verified current state — 2026-10-28
+## Verified current state
+### 2026-10-28 — Initial state & Planning
 - Two planning files supplied for review: `.antigravityrules` and `PROGRESS.md`.
 - The user's original progress note says the repository was newly initialized, but this has **not** been independently verified.
 - No client/server code, installs, tests, Git history, or deployments have been verified in this review.
 - PatrickJS/awesome-cursorrules has **not** been cloned into the project.
 
+### 2026-10-28 — Milestones M0 & M1 verified
+- Milestone M0 completed and committed (`f471317`): Repository structure, ignore rules, and tooling verified.
+- Milestone M1 completed and committed (`5a1ceed`): Express backend and React Vite frontend initialized with `/api/health`.
+
+### 2026-11-07 — Milestone M2 verified
+- Milestone M2 completed and verified locally:
+  - Backend dynamic CORS, structured 404 handler, centralized error handler, and enriched `/api/health` endpoint.
+  - Frontend centralized API client (`client/src/services/api.js`) utilizing `VITE_API_BASE_URL`.
+  - Comprehensive syntax checks (`node --check`), client production build (`npm.cmd run build`), client linter (`oxlint`), and live endpoint testing (`Invoke-RestMethod`) verified with 0 errors.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
-- [ ] M2 — Configure environment variables, CORS, API integration and safe deployment smoke tests.
+- [x] M2 — Configure environment variables, CORS, API integration and safe deployment smoke tests.
 - [ ] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
 - [ ] M4 — Product CRUD and interactive day/night virtual shelf.
 - [ ] M5 — Gemini-assisted product auto-fill with user review.
@@ -27,14 +38,15 @@ A client/server skincare application with user skin profile and goals, interacti
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M1 completed and verified. Awaiting review and commit permission before planning M2.**
+**M2 completed and committed (`8c836c8`). Ready for planning Milestone M3.**
 
 ## Next actions
-1. Present M1 verification results and changed files for user review.
-2. Suggest a single, coherent Git commit message for Milestone M1.
-3. Await user approval before committing or planning Milestone M2.
+1. Discuss and align on Milestone M3 requirements (Mongoose vs MongoDB Native Driver, JWT auth flow, Skin Profile schema).
+2. Prepare and present Milestone M3 plan for user approval.
+3. Await user approval before implementing Milestone M3.
 
 ## Verification / tests
+### Milestones M0 & M1 (2026-10-28)
 - Runtime verification: Node.js `v24.22.0` and npm `11.19.1` verified via `node -v` and `npm.cmd -v`.
 - Ignore rules verification:
   - Positive tests (`git check-ignore -v` and `git check-ignore -q`): verified `.env`, `client/.env`, `server/.env`, `client/.env.local`, `server/.env.production`, `node_modules/`, `client/node_modules`, `server/node_modules`, `client/dist/` are correctly ignored (exit code 0).
@@ -52,12 +64,43 @@ A client/server skincare application with user skin profile and goals, interacti
   - Executed `npm.cmd run build` in `client/`: built in 300ms without errors, producing `dist/index.html`, `dist/assets/index-*.css` (containing Tailwind v4 utility styles), and `dist/assets/index-*.js`.
 - Repository status: Untracked changes are strictly contained within `client/` and `server/` source files and `PROGRESS.md`.
 
+### Milestone M2 (2026-11-07)
+- Runtime verification: Node.js `v24.22.0` and npm `11.19.1` verified.
+- Backend syntax verification:
+  - `node --check server/src/app.js` and `node --check server/src/index.js`: passed with exit code 0.
+- Backend API & error handling verification:
+  - Started backend service (`node server/src/index.js`).
+  - Tested `GET http://localhost:5000/api/health` via `Invoke-RestMethod`: returned HTTP 200 with `{ status: "ok", service: "glow-and-go-backend", environment: "development", uptime: 4, timestamp: "..." }`.
+  - Tested `GET http://localhost:5000/api/non-existent` via `Invoke-RestMethod`: correctly captured HTTP 404 with structured JSON payload `{"error": {"message": "Route not found", "status": 404}}`.
+- Frontend code quality & build verification:
+  - Created centralized Axios service in `client/src/services/api.js` using `import.meta.env.VITE_API_BASE_URL || '/api'`.
+  - Updated `client/src/App.jsx` to consume `api.get('/health')` and handle error response objects.
+  - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all files.
+  - Ran `npm.cmd run build` in `client/`: built production bundle in 594ms producing `dist/index.html`, `dist/assets/index-*.css`, and `dist/assets/index-*.js`.
+- Environment files:
+  - `client/.env.example` and `server/.env.example` documented with comments for dev proxy and production deployment.
+
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
 - Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
+- Milestone M3 will introduce MongoDB Atlas connection, authentication (JWT/bcrypt), and Skin Profile schema.
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
+### 2026-10-28 — Planning review
+- Reviewed the two provided planning files.
+- Replaced forced file-by-file commits with milestone-based commits.
+- Prepared a portable `AGENTS.md` and streamlined agent-specific rules.
+- No app code, commits, remote changes, or deployments performed.
+
+### 2026-10-28 — Milestone M0 completed
+- Verified Git repository status, Node.js (`v24.22.0`), and npm (`11.19.1`).
+- Created root `.gitignore` protecting root, client, and server `.env` files while allowing `.env.example` files to be committed.
+- Created project `README.md` documenting tech stack, architecture, Windows PowerShell notes, and milestones.
+- Ran comprehensive `git check-ignore` checks confirming ignore and exemption rules work as expected.
+- Verified no application code was generated and no dependencies were installed.
+- Marked Milestone M0 as complete.
+
 ### 2026-10-28 — Milestone M1 completed
 - Initialized `server/` with Express, CORS, and dotenv using ES Modules.
 - Created minimal Express health check endpoint `GET /api/health` returning status, service, and timestamp.
@@ -71,16 +114,12 @@ A client/server skincare application with user skin profile and goals, interacti
 - Confirmed zero skincare features, database connections, external APIs, or deployments.
 - Marked Milestone M1 as complete.
 
-### 2026-10-28 — Milestone M0 completed
-- Verified Git repository status, Node.js (`v24.22.0`), and npm (`11.19.1`).
-- Created root `.gitignore` protecting root, client, and server `.env` files while allowing `.env.example` files to be committed.
-- Created project `README.md` documenting tech stack, architecture, Windows PowerShell notes, and milestones.
-- Ran comprehensive `git check-ignore` checks confirming ignore and exemption rules work as expected.
-- Verified no application code was generated and no dependencies were installed.
-- Marked Milestone M0 as complete.
-
-### 2026-10-28 — Planning review
-- Reviewed the two provided planning files.
-- Replaced forced file-by-file commits with milestone-based commits.
-- Prepared a portable `AGENTS.md` and streamlined agent-specific rules.
-- No app code, commits, remote changes, or deployments performed.
+### 2026-11-07 — Milestone M2 completed
+- Configured dynamic CORS in `server/src/app.js` with `CLIENT_ORIGIN` support.
+- Added structured 404 handler and central error handling middleware in Express.
+- Extended `/api/health` to report `environment` and `uptime`.
+- Created centralized Axios client in `client/src/services/api.js`.
+- Updated `client/src/App.jsx` to fetch health data via the API client service and display uptime/environment.
+- Verified backend endpoints, 404 handling, oxlint, and client production build.
+- Updated `.env.example` files for client and server.
+- Marked Milestone M2 as complete.
