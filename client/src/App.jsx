@@ -7,6 +7,7 @@ import SkinProfileCard from './components/SkinProfileCard';
 import ProductShelf from './components/ProductShelf';
 import DailyRoutine from './components/DailyRoutine';
 import ReportsView from './components/ReportsView';
+import GamificationCard from './components/GamificationCard';
 import api from './services/api';
 
 function AppContent() {
@@ -70,6 +71,16 @@ function AppContent() {
               </span>
             ) : isAuthenticated ? (
               <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setMainTab('gamification')}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-orange-100 to-amber-100 hover:from-orange-200 hover:to-amber-200 border border-orange-200/80 text-xs font-black text-orange-900 shadow-2xs transition cursor-pointer"
+                  title="Xem chuỗi streak và huy hiệu thành tích"
+                >
+                  <span>🔥</span>
+                  <span>Thành tích</span>
+                </button>
+
                 <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-2xl bg-rose-50 border border-rose-100 text-xs font-bold text-slate-700">
                   <span>🌸</span>
                   <span>{user.name}</span>
@@ -282,14 +293,29 @@ function AppContent() {
                     <span>📊</span>
                     <span>Báo cáo &amp; Nhật ký da</span>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMainTab('gamification')}
+                    className={`pb-2.5 px-3 text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center space-x-2 border-b-2 shrink-0 ${
+                      mainTab === 'gamification'
+                        ? 'border-rose-500 text-rose-700'
+                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <span>🏆</span>
+                    <span>Thành tích &amp; Streak</span>
+                  </button>
                 </div>
 
                 {mainTab === 'routine' ? (
                   <DailyRoutine onNavigateToShelf={() => setMainTab('shelf')} />
                 ) : mainTab === 'shelf' ? (
                   <ProductShelf />
-                ) : (
+                ) : mainTab === 'reports' ? (
                   <ReportsView />
+                ) : (
+                  <GamificationCard />
                 )}
               </>
             )}

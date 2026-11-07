@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import routineRoutes from './routes/routineRoutes.js';
 import checkInRoutes from './routes/checkInRoutes.js';
+import gamificationRoutes from './routes/gamificationRoutes.js';
 
 const app = express();
 
@@ -50,6 +51,9 @@ app.use('/api/routine', routineRoutes);
 
 // Daily check-ins and trend reports routes
 app.use('/api/checkins', checkInRoutes);
+
+// Gamification streak and achievement badges routes
+app.use('/api/gamification', gamificationRoutes);
 
 // Handle 404 for unknown routes
 app.use((req, res) => {

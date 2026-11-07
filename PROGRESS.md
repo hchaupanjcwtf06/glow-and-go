@@ -81,7 +81,7 @@ A client/server skincare application with user skin profile and goals, interacti
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 16 files), production build in 390ms, and automated integration test suite verified.
 
 ### 2026-11-07 — Milestone M7 verified
-- Milestone M7 completed:
+- Milestone M7 completed and committed (`a51d160`):
   - CheckIn Schema (`server/src/models/CheckIn.js`):
     - Stores `userId`, `date` (YYYY-MM-DD), `routineType` (`day`/`night`), `rating` (1–5), `feelings` tags array, `completedStepsCount`, `notes`, and `environmentalContext`.
   - Backend Check-in Controllers & Routes (`server/src/controllers/checkInController.js`, `server/src/routes/checkInRoutes.js`):
@@ -99,6 +99,21 @@ A client/server skincare application with user skin profile and goals, interacti
     - Scientific limitations & disclaimer banner.
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 19 files), production build in 614ms, and full backend test suite verified.
 
+### 2026-11-07 — Milestone M8 verified
+- Milestone M8 completed:
+  - Streak Engine & Badges Definition (`server/src/controllers/gamificationController.js`):
+    - Implemented `calculateStreak(datesList)` calculating current consecutive check-in streak, longest historical streak, and today's active status.
+    - Defined 6 core achievements: Glow Starter (🌟), Shelf Curator (🧴), Sun Shield (☀️), Streak Flame (🔥), Glass Skin Master (💎), and Barrier Hero (🛡️).
+    - Automatic unlock criteria evaluation for profile onboarding, shelf product count, sunscreen presence, streak milestones, and barrier active ingredients.
+  - Gamification API Routes (`server/src/routes/gamificationRoutes.js`):
+    - Mounted `GET /api/gamification/badges` in `server/src/app.js` with authentication and offline demo fallback resilience.
+  - Frontend Gamification UI (`client/src/components/GamificationCard.jsx`, `client/src/utils/gamificationConstants.js`):
+    - Flame streak hero card with animated glow and total Radiance Points (💎 pts).
+    - Grid of unlocked (colorful glassmorphism) and in-progress (progress bars) badges.
+    - Interactive modal inspecting badge achievements, criteria, and skincare tips upon click.
+    - Header streak quick-access pill (`🔥 Thành tích`) and 4th main dashboard tab (`🏆 Thành tích & Streak`) in `client/src/App.jsx`.
+  - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 21 files), production client build in 508ms, and automated integration test suite verified.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
@@ -108,15 +123,15 @@ A client/server skincare application with user skin profile and goals, interacti
 - [x] M5 — Gemini-assisted product auto-fill with user review.
 - [x] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
 - [x] M7 — Daily check-in, product-use history, analytics and report caveats.
-- [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
+- [x] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M7 completed. Ready for planning Milestone M8 (Gamification, streak rewards, themes, sticker/drag-drop upgrades).**
+**All MVP Milestones M0 through M8 completed, tested, and verified.**
 
 ## Next actions
-1. Present M7 verification results and changed files for user review.
-2. Commit Milestone M7 with a single, coherent commit message upon user approval.
-3. Await user instructions before planning Milestone M8.
+1. Present M8 verification results and changed files for user review.
+2. Commit Milestone M8 with a single, coherent commit message upon user approval.
+3. Push all commits to GitHub repository when ready (`git push origin main`).
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)
@@ -226,10 +241,22 @@ A client/server skincare application with user skin profile and goals, interacti
   - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all 19 files.
   - Ran `npm.cmd run build` in `client/`: built production client bundle in 614ms without warnings or errors.
 
+### Milestone M8 (2026-11-07)
+- Backend syntax verification:
+  - Passed `node --check` for `server/src/controllers/gamificationController.js`, `server/src/routes/gamificationRoutes.js`, and `server/src/app.js` with exit code 0.
+- Live API endpoint verification (`/api/gamification`):
+  - `GET /api/gamification/badges` without token: returned HTTP 401 `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+  - `GET /api/gamification/badges` with token: returned HTTP 200 with streak metrics (currentStreak: 7, longestStreak: 7), 6 badges evaluation, and totalPoints.
+- Frontend code quality & build verification:
+  - Created `client/src/utils/gamificationConstants.js` and `client/src/components/GamificationCard.jsx`.
+  - Added quick streak flame button in Header navigation and 4th main dashboard tab `🏆 Thành tích & Streak` in `client/src/App.jsx`.
+  - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all 21 files.
+  - Ran `npm.cmd run build` in `client/`: built production client bundle in 508ms without warnings or errors.
+
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
 - Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
-- Milestone M8 will introduce Gamification (streaks, badges, rewards, themes, drag/drop polish).
+- All MVP Milestones M0 through M8 completed, tested, and verified.
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
@@ -312,3 +339,11 @@ A client/server skincare application with user skin profile and goals, interacti
 - Added `📊 Báo cáo & Nhật ký da` tab into primary dashboard navigation in `client/src/App.jsx`.
 - Verified 0 syntax errors, 0 linter warnings, production build, and integration tests.
 - Marked Milestone M7 as complete.
+
+### 2026-11-07 — Milestone M8 completed
+- Implemented streak calculation engine and achievements criteria in `server/src/controllers/gamificationController.js`.
+- Mounted `GET /api/gamification/badges` in `server/src/routes/gamificationRoutes.js` and `server/src/app.js`.
+- Created interactive frontend `client/src/components/GamificationCard.jsx` and badge definitions in `client/src/utils/gamificationConstants.js`.
+- Added header streak quick-access pill and 4th main dashboard tab `🏆 Thành tích & Streak` in `client/src/App.jsx`.
+- Verified 0 syntax errors, 0 linter warnings, production build, and integration tests.
+- Marked Milestone M8 as complete. All MVP milestones M0 through M8 achieved.
