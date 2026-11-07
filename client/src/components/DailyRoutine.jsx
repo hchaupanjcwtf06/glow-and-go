@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { CITIES_LIST, UV_RISK_COLORS } from '../utils/routineConstants';
+import CheckInModal from './CheckInModal';
 
 export default function DailyRoutine({ onNavigateToShelf }) {
   const [selectedCity, setSelectedCity] = useState('hcm');
@@ -13,6 +14,7 @@ export default function DailyRoutine({ onNavigateToShelf }) {
 
   // Local state for step checkboxes: { [stepIndex]: boolean }
   const [checkedSteps, setCheckedSteps] = useState({});
+  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -301,10 +303,18 @@ export default function DailyRoutine({ onNavigateToShelf }) {
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             <span className="text-xs font-extrabold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
               {completedCount} / {steps.length} bước ({progressPercent}%)
             </span>
+            <button
+              type="button"
+              onClick={() => setIsCheckInOpen(true)}
+              className="px-3 py-1 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center space-x-1"
+            >
+              <span>✍️</span>
+              <span>Check-in</span>
+            </button>
           </div>
         </div>
 
@@ -441,6 +451,14 @@ export default function DailyRoutine({ onNavigateToShelf }) {
           </p>
         </div>
       </div>
+
+      {/* Daily Check-in Modal */}
+      <CheckInModal
+        isOpen={isCheckInOpen}
+        onClose={() => setIsCheckInOpen(false)}
+        routineType={routineType}
+        completedStepsCount={completedCount}
+      />
     </div>
   );
 }

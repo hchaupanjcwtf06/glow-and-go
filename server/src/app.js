@@ -4,6 +4,7 @@ import { isDbConnected } from './db.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import routineRoutes from './routes/routineRoutes.js';
+import checkInRoutes from './routes/checkInRoutes.js';
 
 const app = express();
 
@@ -46,6 +47,9 @@ app.use('/api/products', productRoutes);
 
 // Daily skincare routine and environmental routes
 app.use('/api/routine', routineRoutes);
+
+// Daily check-ins and trend reports routes
+app.use('/api/checkins', checkInRoutes);
 
 // Handle 404 for unknown routes
 app.use((req, res) => {

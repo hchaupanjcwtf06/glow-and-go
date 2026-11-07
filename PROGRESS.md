@@ -61,7 +61,7 @@ A client/server skincare application with user skin profile and goals, interacti
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 14 files), production build in 420ms, backend test suite confirming 401 unauthenticated block, 400 validation, catalog match, and heuristic parsing.
 
 ### 2026-11-07 — Milestone M6 verified
-- Milestone M6 completed:
+- Milestone M6 completed and committed (`dbb0f9b`):
   - Environmental Data Provider (`server/src/services/weatherService.js`):
     - Real-time weather, UV index, and AQI ingestion via Open-Meteo REST API with zero external API key requirements.
     - Skincare evaluation logic for UV Index (Low, Moderate, High, Very High, Extreme) and AQI (Good, Moderate, Sensitive, Unhealthy) with graceful offline fallback.
@@ -80,6 +80,25 @@ A client/server skincare application with user skin profile and goals, interacti
     - Prominent cosmetic wellness disclaimer banner.
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 16 files), production build in 390ms, and automated integration test suite verified.
 
+### 2026-11-07 — Milestone M7 verified
+- Milestone M7 completed:
+  - CheckIn Schema (`server/src/models/CheckIn.js`):
+    - Stores `userId`, `date` (YYYY-MM-DD), `routineType` (`day`/`night`), `rating` (1–5), `feelings` tags array, `completedStepsCount`, `notes`, and `environmentalContext`.
+  - Backend Check-in Controllers & Routes (`server/src/controllers/checkInController.js`, `server/src/routes/checkInRoutes.js`):
+    - `POST /api/checkins`: saves daily check-ins with in-memory fallback store when database is disconnected.
+    - `GET /api/checkins/today`: checks if user already completed check-in for morning or night.
+    - `GET /api/checkins/history`: returns chronological check-in history list.
+    - `GET /api/checkins/report`: computes sample size $N$, average skin satisfaction rating, routine adherence rate (%), feelings frequency breakdown, and 7-day trend scores.
+    - Skincare medical transparency disclaimer included in report payload.
+  - Frontend Interactive Check-in & Trend Dashboard (`client/src/components/CheckInModal.jsx`, `client/src/components/ReportsView.jsx`, `client/src/utils/checkInConstants.js`):
+    - Quick check-in modal with 1–5 star rating buttons, clickable feeling tags (`💧 Đủ ẩm`, `🌿 Dịu da`, `✨ Glass skin`, `🫧 Đổ dầu`, etc.), and notes.
+    - Reports tab featuring 3 top KPI summary cards (Average Rating, Adherence %, Sample Size $N$).
+    - 7-day responsive visual bar chart visualizer.
+    - Feelings distribution progress bars.
+    - Check-in button integrated inside Daily Routine checklist for frictionless logging.
+    - Scientific limitations & disclaimer banner.
+  - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 19 files), production build in 614ms, and full backend test suite verified.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
@@ -88,16 +107,16 @@ A client/server skincare application with user skin profile and goals, interacti
 - [x] M4 — Product CRUD and interactive day/night virtual shelf.
 - [x] M5 — Gemini-assisted product auto-fill with user review.
 - [x] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
-- [ ] M7 — Daily check-in, product-use history, analytics and report caveats.
+- [x] M7 — Daily check-in, product-use history, analytics and report caveats.
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M6 completed. Ready for planning Milestone M7 (Daily check-in, product-use history, analytics and report caveats).**
+**M7 completed. Ready for planning Milestone M8 (Gamification, streak rewards, themes, sticker/drag-drop upgrades).**
 
 ## Next actions
-1. Present M6 verification results and changed files for user review.
-2. Commit Milestone M6 with a single, coherent commit message upon user approval.
-3. Await user instructions before planning Milestone M7.
+1. Present M7 verification results and changed files for user review.
+2. Commit Milestone M7 with a single, coherent commit message upon user approval.
+3. Await user instructions before planning Milestone M8.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)
@@ -191,10 +210,26 @@ A client/server skincare application with user skin profile and goals, interacti
   - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all 16 files.
   - Ran `npm.cmd run build` in `client/`: built production client bundle in 390ms without warnings or errors.
 
+### Milestone M7 (2026-11-07)
+- Backend syntax & schema verification:
+  - Passed `node --check` for `server/src/models/CheckIn.js`, `server/src/controllers/checkInController.js`, `server/src/routes/checkInRoutes.js`, and `server/src/app.js` with exit code 0.
+- Live API endpoint verification (`/api/checkins`):
+  - `GET /api/checkins/report` without token: returned HTTP 401 `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+  - `GET /api/checkins/report` with token: returned HTTP 200 with sample size $N$, average rating, adherence rate, and 7-day trend scores.
+  - `POST /api/checkins` with invalid rating: returned HTTP 400 `{"error":{"message":"Đánh giá cảm nhận da phải là số từ 1 đến 5 sao.","status":400}}`.
+  - `POST /api/checkins` with valid payload: returned HTTP 201 with stored check-in record.
+  - `GET /api/checkins/today`: returned HTTP 200 confirming check-in status for today.
+- Frontend code quality & build verification:
+  - Created `client/src/utils/checkInConstants.js`, `client/src/components/CheckInModal.jsx`, and `client/src/components/ReportsView.jsx`.
+  - Added primary tab `📊 Báo cáo & Nhật ký da` in `client/src/App.jsx`.
+  - Integrated quick check-in modal button directly inside `DailyRoutine.jsx` checklist header.
+  - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all 19 files.
+  - Ran `npm.cmd run build` in `client/`: built production client bundle in 614ms without warnings or errors.
+
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
 - Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
-- Milestone M7 will introduce daily check-ins, product-use history logging, and trend analytics.
+- Milestone M8 will introduce Gamification (streaks, badges, rewards, themes, drag/drop polish).
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
@@ -269,3 +304,11 @@ A client/server skincare application with user skin profile and goals, interacti
 - Built interactive frontend `client/src/components/DailyRoutine.jsx` and dashboard switcher tabs in `client/src/App.jsx`.
 - Verified 0 syntax errors, 0 linter warnings, production build, and automated test suite.
 - Marked Milestone M6 as complete.
+
+### 2026-11-07 — Milestone M7 completed
+- Implemented `CheckIn` schema (`server/src/models/CheckIn.js`) with ratings, feelings tags, notes, and weather context.
+- Developed `server/src/controllers/checkInController.js` and `server/src/routes/checkInRoutes.js` providing check-in CRUD, today's status, and trend analytics with in-memory fallback.
+- Built interactive frontend `client/src/components/CheckInModal.jsx`, `client/src/components/ReportsView.jsx`, and `client/src/utils/checkInConstants.js`.
+- Added `📊 Báo cáo & Nhật ký da` tab into primary dashboard navigation in `client/src/App.jsx`.
+- Verified 0 syntax errors, 0 linter warnings, production build, and integration tests.
+- Marked Milestone M7 as complete.
