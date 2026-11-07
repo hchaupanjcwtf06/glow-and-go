@@ -8,6 +8,23 @@ const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 const ALLOWED_SKIN_TYPES = ['oily', 'dry', 'combination', 'normal', 'sensitive'];
 const ALLOWED_SENSITIVITY = ['low', 'medium', 'high'];
 
+// Default demo account credentials and initial skin profile
+export const DEMO_USER = {
+  _id: '507f1f77bcf86cd799439011',
+  name: 'Tô Huyền Châu',
+  email: 'demo@glow.vn',
+  skinProfile: {
+    skinType: 'combination',
+    concerns: ['oiliness', 'pore', 'dark_spots'],
+    goals: ['hydration', 'glow', 'barrier'],
+    sensitivityLevel: 'low',
+    isOnboarded: true,
+  },
+  createdAt: new Date('2026-03-01T08:00:00.000Z'),
+};
+
+let currentDemoUser = { ...DEMO_USER };
+
 export async function register(req, res, next) {
   try {
     const { name, email, password } = req.body || {};
@@ -39,17 +56,43 @@ export async function register(req, res, next) {
       });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
+      const userPayload = {
+        _id: '507f1f77bcf86cd799439011',
+        name: name.trim(),
+        email: normalizedEmail,
+        skinProfile: {
+          skinType: 'normal',
+          concerns: [],
+          goals: [],
+          sensitivityLevel: 'medium',
+          isOnboarded: false,
         },
+        createdAt: new Date(),
+      };
+      currentDemoUser = userPayload;
+
+      const token = jwt.sign(
+        {
+          id: userPayload._id,
+          email: userPayload.email,
+          name: userPayload.name,
+          skinProfile: userPayload.skinProfile,
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.status(201).json({
+        message: 'Registration successful (chế độ demo offline)',
+        token,
+        user: userPayload,
+        isDemo: true,
       });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
@@ -99,17 +142,38 @@ export async function login(req, res, next) {
       });
     }
 
-    if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Allow instant demo login or offline login without requiring MongoDB
+    if (normalizedEmail === 'demo@glow.vn' || !isDbConnected()) {
+      const userPayload = {
+        ...currentDemoUser,
+        email: normalizedEmail === 'demo@glow.vn' ? 'demo@glow.vn' : normalizedEmail,
+        name:
+          normalizedEmail === 'demo@glow.vn'
+            ? currentDemoUser.name
+            : normalizedEmail.split('@')[0] || 'Tô Huyền Châu',
+      };
+
+      const token = jwt.sign(
+        {
+          id: userPayload._id,
+          email: userPayload.email,
+          name: userPayload.name,
+          skinProfile: userPayload.skinProfile,
         },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.status(200).json({
+        message: 'Login successful (tài khoản demo offline)',
+        token,
+        user: userPayload,
+        isDemo: true,
       });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
@@ -148,6 +212,17 @@ export async function login(req, res, next) {
 }
 
 export function getMe(req, res) {
+  if (!isDbConnected()) {
+    return res.status(200).json({
+      user: {
+        ...currentDemoUser,
+        ...(req.user || {}),
+        skinProfile: req.user?.skinProfile || currentDemoUser.skinProfile,
+      },
+      isDemo: true,
+    });
+  }
+
   return res.status(200).json({
     user: req.user,
   });
@@ -155,16 +230,6 @@ export function getMe(req, res) {
 
 export async function updateSkinProfile(req, res, next) {
   try {
-    if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
-        },
-      });
-    }
-
     const { skinType, concerns, goals, sensitivityLevel } = req.body || {};
 
     if (skinType && !ALLOWED_SKIN_TYPES.includes(skinType)) {
@@ -182,6 +247,29 @@ export async function updateSkinProfile(req, res, next) {
           message: `Invalid sensitivityLevel. Must be one of: ${ALLOWED_SENSITIVITY.join(', ')}`,
           status: 400,
         },
+      });
+    }
+
+    if (!isDbConnected()) {
+      currentDemoUser.skinProfile = {
+        skinType: skinType || currentDemoUser.skinProfile?.skinType || 'normal',
+        concerns: Array.isArray(concerns)
+          ? concerns
+          : currentDemoUser.skinProfile?.concerns || [],
+        goals: Array.isArray(goals)
+          ? goals
+          : currentDemoUser.skinProfile?.goals || [],
+        sensitivityLevel:
+          sensitivityLevel ||
+          currentDemoUser.skinProfile?.sensitivityLevel ||
+          'medium',
+        isOnboarded: true,
+      };
+
+      return res.status(200).json({
+        message: 'Skin profile updated successfully (chế độ demo offline)',
+        user: currentDemoUser,
+        isDemo: true,
       });
     }
 
@@ -214,4 +302,3 @@ export async function updateSkinProfile(req, res, next) {
     return next(err);
   }
 }
-

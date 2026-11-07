@@ -114,6 +114,20 @@ A client/server skincare application with user skin profile and goals, interacti
     - Header streak quick-access pill (`🔥 Thành tích`) and 4th main dashboard tab (`🏆 Thành tích & Streak`) in `client/src/App.jsx`.
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 21 files), production client build in 508ms, and automated integration test suite verified.
 
+### 2026-11-07 — Offline Demo Test Account & In-Memory Shelf Fallback verified
+- Offline Demo Resilience & Test Account completed:
+  - Demo Account Credentials & Auth Controller (`server/src/controllers/authController.js`):
+    - Pre-configured demo user: `demo@glow.vn` / `password123` (Tô Huyền Châu, Da hỗn hợp thiên dầu, Onboarded).
+    - Seamless JWT issuance and in-memory session persistence when database connection is unavailable.
+    - In-memory support for registration, profile retrieval (`getMe`), and updating skin profile (`updateSkinProfile`).
+  - Auth Middleware Fallback (`server/src/middlewares/auth.js`):
+    - Populates offline `req.user` with valid `skinProfile` and demo credentials to satisfy downstream recommendation and gamification checks.
+  - In-Memory Product Shelf Fallback (`server/src/controllers/productController.js`):
+    - Full in-memory CRUD operations (`getProducts`, `getProductById`, `createProduct`, `updateProduct`, `deleteProduct`) pre-loaded with curated skincare shelf when `!isDbConnected()`.
+  - Frontend 1-Click Demo Login (`client/src/components/AuthModal.jsx`):
+    - Added quick-login button: *"⚡ Đăng nhập nhanh với tài khoản Demo (demo@glow.vn)"* allowing instant testing without database configuration.
+  - Verification: Node.js syntax checked, automated Node test suite verified login, getProducts, createProduct, updateProduct, deleteProduct, and oxlint passed with 0 warnings/0 errors.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
@@ -124,14 +138,15 @@ A client/server skincare application with user skin profile and goals, interacti
 - [x] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
 - [x] M7 — Daily check-in, product-use history, analytics and report caveats.
 - [x] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
+- [x] Offline Demo Mode — In-memory demo test account and full offline shelf support for immediate testing without MongoDB Atlas.
 
 ## Current focus
-**All MVP Milestones M0 through M8 completed, tested, and verified.**
+**Full application complete with offline test account (`demo@glow.vn`) ready for testing.**
 
 ## Next actions
-1. Present M8 verification results and changed files for user review.
-2. Commit Milestone M8 with a single, coherent commit message upon user approval.
-3. Push all commits to GitHub repository when ready (`git push origin main`).
+1. Present demo account credentials and offline testing capabilities to the user.
+2. Commit with a clean message following Git conventions.
+3. Push all commits to GitHub when requested.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)

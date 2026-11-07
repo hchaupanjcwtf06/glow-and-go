@@ -35,9 +35,16 @@ export async function authenticate(req, res, next) {
       req.user = user;
     } else {
       req.user = {
-        _id: decoded.id,
-        email: decoded.email,
-        name: decoded.name || 'User',
+        _id: decoded.id || '507f1f77bcf86cd799439011',
+        email: decoded.email || 'demo@glow.vn',
+        name: decoded.name || 'Tô Huyền Châu',
+        skinProfile: decoded.skinProfile || {
+          skinType: 'combination',
+          concerns: ['oiliness', 'pore', 'dark_spots'],
+          goals: ['hydration', 'glow', 'barrier'],
+          sensitivityLevel: 'low',
+          isOnboarded: true,
+        },
       };
     }
 

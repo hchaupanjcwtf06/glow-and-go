@@ -5,16 +5,38 @@ import Product, {
 } from '../models/Product.js';
 import { isDbConnected } from '../db.js';
 import { suggestProductWithGemini } from '../services/geminiService.js';
+import { DEMO_SHELF_PRODUCTS } from '../services/routineEngine.js';
+
+// In-memory fallback product shelf for offline / disconnected DB mode
+let inMemoryProducts = DEMO_SHELF_PRODUCTS.map((p) => ({
+  ...p,
+  userId: '507f1f77bcf86cd799439011',
+  createdAt: new Date(),
+}));
 
 export async function getProducts(req, res, next) {
   try {
     if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
-        },
+      let filtered = [...inMemoryProducts];
+
+      if (req.query.routineTime === 'day') {
+        filtered = filtered.filter((p) => p.routineTime === 'day' || p.routineTime === 'both');
+      } else if (req.query.routineTime === 'night') {
+        filtered = filtered.filter((p) => p.routineTime === 'night' || p.routineTime === 'both');
+      } else if (req.query.routineTime) {
+        filtered = filtered.filter((p) => p.routineTime === req.query.routineTime);
+      }
+
+      if (req.query.category && ALLOWED_CATEGORIES.includes(req.query.category)) {
+        filtered = filtered.filter((p) => p.category === req.query.category);
+      }
+
+      filtered.sort((a, b) => (a.stepOrder || 99) - (b.stepOrder || 99));
+
+      return res.status(200).json({
+        count: filtered.length,
+        products: filtered,
+        isDemo: true,
       });
     }
 
@@ -49,13 +71,16 @@ export async function getProducts(req, res, next) {
 export async function getProductById(req, res, next) {
   try {
     if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
-        },
-      });
+      const prod = inMemoryProducts.find((p) => p._id === req.params.id);
+      if (!prod) {
+        return res.status(404).json({
+          error: {
+            message: 'Product not found on your shelf.',
+            status: 404,
+          },
+        });
+      }
+      return res.status(200).json({ product: prod, isDemo: true });
     }
 
     const product = await Product.findById(req.params.id);
@@ -77,16 +102,6 @@ export async function getProductById(req, res, next) {
 
 export async function createProduct(req, res, next) {
   try {
-    if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
-        },
-      });
-    }
-
     const {
       name,
       brand,
@@ -131,6 +146,32 @@ export async function createProduct(req, res, next) {
         ? stepOrder
         : CATEGORY_STEP_MAP[category] || 99;
 
+    if (!isDbConnected()) {
+      const newProd = {
+        _id: 'prod-' + Date.now(),
+        userId: req.user._id,
+        name: name.trim(),
+        brand: brand ? brand.trim() : '',
+        category,
+        routineTime: routineTime || 'both',
+        stepOrder: resolvedStepOrder,
+        openedDate: openedDate ? new Date(openedDate) : null,
+        paoMonths: typeof paoMonths === 'number' ? paoMonths : 12,
+        activeIngredients: Array.isArray(activeIngredients)
+          ? activeIngredients
+          : [],
+        notes: notes ? notes.trim() : '',
+        createdAt: new Date(),
+      };
+      inMemoryProducts.push(newProd);
+
+      return res.status(201).json({
+        message: 'Product added to shelf successfully (bộ nhớ tạm)',
+        product: newProd,
+        isDemo: true,
+      });
+    }
+
     const product = await Product.create({
       userId: req.user._id,
       name: name.trim(),
@@ -157,13 +198,84 @@ export async function createProduct(req, res, next) {
 
 export async function updateProduct(req, res, next) {
   try {
+    const {
+      name,
+      brand,
+      category,
+      routineTime,
+      stepOrder,
+      openedDate,
+      paoMonths,
+      activeIngredients,
+      notes,
+    } = req.body || {};
+
     if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
-        },
+      const prodIndex = inMemoryProducts.findIndex((p) => p._id === req.params.id);
+      if (prodIndex === -1) {
+        return res.status(404).json({
+          error: {
+            message: 'Product not found on your shelf.',
+            status: 404,
+          },
+        });
+      }
+
+      const prod = { ...inMemoryProducts[prodIndex] };
+
+      if (name) {
+        if (name.trim().length < 2) {
+          return res.status(400).json({
+            error: {
+              message: 'Product name must be at least 2 characters.',
+              status: 400,
+            },
+          });
+        }
+        prod.name = name.trim();
+      }
+
+      if (category) {
+        if (!ALLOWED_CATEGORIES.includes(category)) {
+          return res.status(400).json({
+            error: {
+              message: `Invalid category. Must be one of: ${ALLOWED_CATEGORIES.join(', ')}`,
+              status: 400,
+            },
+          });
+        }
+        prod.category = category;
+        if (typeof stepOrder !== 'number') {
+          prod.stepOrder = CATEGORY_STEP_MAP[category] || prod.stepOrder;
+        }
+      }
+
+      if (brand !== undefined) prod.brand = brand ? brand.trim() : '';
+      if (routineTime) {
+        if (!ALLOWED_ROUTINE_TIMES.includes(routineTime)) {
+          return res.status(400).json({
+            error: {
+              message: `Invalid routineTime. Must be "day", "night", or "both".`,
+              status: 400,
+            },
+          });
+        }
+        prod.routineTime = routineTime;
+      }
+      if (typeof stepOrder === 'number') prod.stepOrder = stepOrder;
+      if (openedDate !== undefined)
+        prod.openedDate = openedDate ? new Date(openedDate) : null;
+      if (paoMonths !== undefined) prod.paoMonths = paoMonths;
+      if (Array.isArray(activeIngredients))
+        prod.activeIngredients = activeIngredients;
+      if (notes !== undefined) prod.notes = notes ? notes.trim() : '';
+
+      inMemoryProducts[prodIndex] = prod;
+
+      return res.status(200).json({
+        message: 'Product updated successfully (bộ nhớ tạm)',
+        product: prod,
+        isDemo: true,
       });
     }
 
@@ -177,18 +289,6 @@ export async function updateProduct(req, res, next) {
         },
       });
     }
-
-    const {
-      name,
-      brand,
-      category,
-      routineTime,
-      stepOrder,
-      openedDate,
-      paoMonths,
-      activeIngredients,
-      notes,
-    } = req.body || {};
 
     if (name) {
       if (name.trim().length < 2) {
@@ -251,12 +351,21 @@ export async function updateProduct(req, res, next) {
 export async function deleteProduct(req, res, next) {
   try {
     if (!isDbConnected()) {
-      return res.status(503).json({
-        error: {
-          message:
-            'Database is currently unavailable. Please verify MONGODB_URI configuration.',
-          status: 503,
-        },
+      const prodIndex = inMemoryProducts.findIndex((p) => p._id === req.params.id);
+      if (prodIndex === -1) {
+        return res.status(404).json({
+          error: {
+            message: 'Product not found on your shelf.',
+            status: 404,
+          },
+        });
+      }
+
+      inMemoryProducts.splice(prodIndex, 1);
+
+      return res.status(200).json({
+        message: 'Product removed from shelf successfully (bộ nhớ tạm)',
+        isDemo: true,
       });
     }
 
