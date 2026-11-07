@@ -1,8 +1,6 @@
 import { getEnvironmentalData } from '../services/weatherService.js';
 import { buildRoutine, DEMO_SHELF_PRODUCTS } from '../services/routineEngine.js';
-import { isDbConnected } from '../db.js';
-import Product from '../models/Product.js';
-import User from '../models/User.js';
+import { supabase, isSupabaseConfigured } from '../supabase.js';
 
 /**
  * Controller to fetch environmental conditions (weather, UV index, AQI)
@@ -43,25 +41,39 @@ export async function getDailyRoutine(req, res, next) {
     let skinProfile = {};
     let isDemo = false;
 
-    if (isDbConnected()) {
-      const [products, user] = await Promise.all([
-        Product.find({ userId: req.user._id }),
-        User.findById(req.user._id).select('skinProfile'),
+    if (isSupabaseConfigured()) {
+      const [productsRes, userRes] = await Promise.all([
+        supabase
+          .from('products')
+          .select('*')
+          .eq('user_id', req.user._id || req.user.id),
+        supabase
+          .from('users')
+          .select('skin_profile')
+          .eq('id', req.user._id || req.user.id)
+          .maybeSingle(),
       ]);
 
-      skinProfile = user?.skinProfile || {};
-
-      if (products && products.length > 0) {
-        userProducts = products;
+      skinProfile = userRes.data?.skin_profile || req.user.skinProfile || {};
+      const dbProducts = productsRes.data || [];
+      if (dbProducts.length > 0) {
+        userProducts = dbProducts.map((p) => ({
+          _id: p.id,
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          routineTime: p.routine_time,
+          activeIngredients: p.active_ingredients || [],
+        }));
       } else {
         // Shelf is empty: provide rich demo shelf so routine engine demonstrates full value
         userProducts = DEMO_SHELF_PRODUCTS;
         isDemo = true;
       }
     } else {
-      // Graceful fallback when MongoDB is unconfigured/offline
+      // Graceful fallback when running in offline/demo mode
       userProducts = DEMO_SHELF_PRODUCTS;
-      skinProfile = {
+      skinProfile = req.user?.skinProfile || {
         skinType: 'combination',
         sensitivityLevel: 'low',
         concerns: ['oiliness', 'pore'],
@@ -81,10 +93,9 @@ export async function getDailyRoutine(req, res, next) {
       routine,
       environment: envData,
       isDemo,
-      database: isDbConnected() ? 'connected' : 'disconnected',
+      database: isSupabaseConfigured() ? 'supabase' : 'offline_demo',
     });
   } catch (err) {
     return next(err);
   }
 }
-

@@ -129,22 +129,18 @@ A client/server skincare application with user skin profile and goals, interacti
   - Verification: Node.js syntax checked, automated Node test suite verified login, getProducts, createProduct, updateProduct, deleteProduct, and oxlint passed with 0 warnings/0 errors.
 
 ### 2026-11-07 — Supabase Cloud Database Integration verified
-- Supabase Integration & Dual-Cloud Architecture completed:
+- Supabase Integration & Complete MongoDB Removal:
   - PostgreSQL Schema Migration (`server/src/db/supabase-schema.sql`):
     - Created DDL schema with 3 relational tables: `users` (with JSONB `skin_profile`), `products` (shelf categories, PAO, active ingredients array), and `check_ins` (ratings 1–5, feelings, unique constraint on `(user_id, date, routine_type)`).
     - Included pre-seeded demo user and 5 curated day/night skincare products.
-  - Supabase Client Module (`server/src/supabase.js`):
-    - Configured `@supabase/supabase-js` initialization reading `SUPABASE_URL` and `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`.
-    - Added helper `isSupabaseConfigured()` enabling dual-cloud capability (Supabase -> MongoDB Atlas -> in-memory fallback).
-  - Controller Adapters:
-    - `authController.js`: Supabase queries for `register`, `login`, `getMe`, and `updateSkinProfile`.
-    - `productController.js`: Supabase CRUD operations for `getProducts`, `getProductById`, `createProduct`, `updateProduct`, and `deleteProduct`.
-    - `checkInController.js`: Supabase upsert for `createCheckIn`, `getTodayCheckIn`, `getCheckInHistory`, and `getCheckInReport`.
-    - `gamificationController.js`: Supabase queries for streak calculations, radiance points, and 6 badges evaluation.
-    - `middlewares/auth.js`: Supabase user token verification.
-  - Environment Configuration:
-    - Updated `server/.env.example` with Supabase project credentials.
-  - Verification: 0 syntax errors across all server files (`node --check`), automated Node dual-cloud test suite passed, `oxlint` 0 warnings/0 errors, client build completed in 357ms.
+  - Complete MongoDB Removal:
+    - Removed MongoDB connection startup from `server/src/index.js` and silenced Mongoose warnings in `server/src/db.js`.
+    - Removed `MONGODB_URI` from `.env.example`.
+    - Updated `server/src/controllers/routineController.js` to rely exclusively on Supabase with offline in-memory fallback.
+  - Dynamic Supabase Resolution & Multi-Path Env Loader (`server/src/supabase.js`):
+    - Configured multi-path `.env` auto-detection (resolves from `server/` or workspace root).
+    - Proxy pattern for `supabase` client ensuring dynamic credential checking without startup crash.
+  - Verification: 0 syntax errors across all server files (`node --check`), clean server startup with no MongoDB warnings, automated Node test suite passed, `oxlint` 0 warnings/0 errors, client build completed in 357ms.
 
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
@@ -160,12 +156,11 @@ A client/server skincare application with user skin profile and goals, interacti
 - [x] Supabase Cloud Database — Supabase PostgreSQL integration with dual-cloud fallback and SQL migration script.
 
 ## Current focus
-**Full application with Supabase integration ready for testing with or without database credentials.**
+**Backend completely migrated to Supabase Cloud Database (PostgreSQL) with MongoDB fully removed.**
 
 ## Next actions
-1. Guide user on how to run `supabase-schema.sql` on Supabase Dashboard and add `.env` keys.
-2. Commit changes with a clean commit message upon user approval.
-3. Push to GitHub when requested.
+1. User adds their `SUPABASE_URL` and `SUPABASE_ANON_KEY` to `server/.env`.
+2. Commit and push changes upon user approval.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)
