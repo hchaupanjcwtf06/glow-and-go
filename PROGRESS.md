@@ -21,16 +21,25 @@ A client/server skincare application with user skin profile and goals, interacti
 - Milestone M1 completed and committed (`5a1ceed`): Express backend and React Vite frontend initialized with `/api/health`.
 
 ### 2026-11-07 — Milestone M2 verified
-- Milestone M2 completed and verified locally:
+- Milestone M2 completed and committed (`7d89bdd`):
   - Backend dynamic CORS, structured 404 handler, centralized error handler, and enriched `/api/health` endpoint.
   - Frontend centralized API client (`client/src/services/api.js`) utilizing `VITE_API_BASE_URL`.
   - Comprehensive syntax checks (`node --check`), client production build (`npm.cmd run build`), client linter (`oxlint`), and live endpoint testing (`Invoke-RestMethod`) verified with 0 errors.
+
+### 2026-11-07 — Milestone M3 verified
+- Milestone M3 completed and committed (`0c3004b`):
+  - Backend MongoDB connection setup with Mongoose (`server/src/db.js`) with graceful fallback when unconfigured.
+  - User model with nested Skin Profile schema (`server/src/models/User.js`): `skinType`, `concerns`, `goals`, `sensitivityLevel`, `isOnboarded`.
+  - Authentication middleware (`server/src/middlewares/auth.js`) validating Bearer JWT tokens.
+  - Auth controllers & routes (`/api/auth/register`, `/api/auth/login`, `/api/auth/me`, `/api/auth/skin-profile`) using `bcryptjs` and `jsonwebtoken`.
+  - Frontend React 19 AuthContext, Axios interceptor for JWT injection, AuthModal (Login/Register), OnboardingModal (Skin Survey), and SkinProfileCard.
+  - Verification: 0 syntax errors, 0 linter warnings (`oxlint`), production build in 253ms, live endpoint tests (401 on missing/bad token, 400 on invalid input, 503 on unconfigured DB).
 
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
 - [x] M2 — Configure environment variables, CORS, API integration and safe deployment smoke tests.
-- [ ] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
+- [x] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
 - [ ] M4 — Product CRUD and interactive day/night virtual shelf.
 - [ ] M5 — Gemini-assisted product auto-fill with user review.
 - [ ] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
@@ -38,12 +47,12 @@ A client/server skincare application with user skin profile and goals, interacti
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M2 completed and committed (`8c836c8`). Ready for planning Milestone M3.**
+**M3 completed and committed (`0c3004b`). Ready for planning Milestone M4.**
 
 ## Next actions
-1. Discuss and align on Milestone M3 requirements (Mongoose vs MongoDB Native Driver, JWT auth flow, Skin Profile schema).
-2. Prepare and present Milestone M3 plan for user approval.
-3. Await user approval before implementing Milestone M3.
+1. Present M3 verification results and changed files for user review.
+2. Suggest a single, coherent Git commit message for Milestone M3.
+3. Await user approval before committing or planning Milestone M4.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)
@@ -80,10 +89,27 @@ A client/server skincare application with user skin profile and goals, interacti
 - Environment files:
   - `client/.env.example` and `server/.env.example` documented with comments for dev proxy and production deployment.
 
+### Milestone M3 (2026-11-07)
+- Dependencies verification:
+  - Installed `mongoose` (ODM), `bcryptjs` (password hashing), and `jsonwebtoken` (auth tokens) in `server/`.
+- Backend syntax verification:
+  - Passed `node --check` for `server/src/db.js`, `server/src/models/User.js`, `server/src/middlewares/auth.js`, `server/src/controllers/authController.js`, `server/src/routes/authRoutes.js`, `server/src/app.js`, and `server/src/index.js` with exit code 0.
+- Live API endpoint & Auth verification:
+  - `GET http://localhost:5000/api/health`: returned HTTP 200 with `{ status: "ok", database: "disconnected", ... }` confirming graceful fallback when `MONGODB_URI` is unconfigured.
+  - `GET http://localhost:5000/api/auth/me` without Authorization header: returned HTTP 401 with `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+  - `GET http://localhost:5000/api/auth/me` with invalid Bearer token: returned HTTP 401 with `{"error":{"message":"Invalid authentication token.","status":401}}`.
+  - `POST http://localhost:5000/api/auth/register` with short name: returned HTTP 400 with `{"error":{"message":"Name is required and must be at least 2 characters long.","status":400}}`.
+  - `POST http://localhost:5000/api/auth/login` with missing fields: returned HTTP 400 with `{"error":{"message":"Email and password are required.","status":400}}`.
+  - `POST http://localhost:5000/api/auth/register` when DB is disconnected: returned HTTP 503 with `{"error":{"message":"Database is currently unavailable. Please verify MONGODB_URI configuration.","status":503}}`.
+- Frontend code quality & build verification:
+  - Implemented `AuthContext`, `useAuth`, Axios interceptors, `AuthModal`, `OnboardingModal`, and `SkinProfileCard`.
+  - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all 10 source files.
+  - Executed `npm.cmd run build` in `client/`: built production bundle in 253ms without errors.
+
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
 - Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
-- Milestone M3 will introduce MongoDB Atlas connection, authentication (JWT/bcrypt), and Skin Profile schema.
+- Milestone M3 completed: MongoDB Atlas connection string (`MONGODB_URI`) can be set in `server/.env` when connecting to active Atlas cluster.
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
@@ -123,3 +149,14 @@ A client/server skincare application with user skin profile and goals, interacti
 - Verified backend endpoints, 404 handling, oxlint, and client production build.
 - Updated `.env.example` files for client and server.
 - Marked Milestone M2 as complete.
+
+### 2026-11-07 — Milestone M3 completed
+- Added Mongoose connection module `server/src/db.js` with graceful fallback for unconfigured environments.
+- Implemented `server/src/models/User.js` with schema validation for `skinType`, `concerns`, `goals`, `sensitivityLevel`, and `isOnboarded`.
+- Created `server/src/middlewares/auth.js` for JWT Bearer verification.
+- Implemented `server/src/controllers/authController.js` and `server/src/routes/authRoutes.js` (`/register`, `/login`, `/me`, `/skin-profile`).
+- Configured `client/src/services/api.js` request interceptor for automated JWT token attachment and 401 handling.
+- Built React AuthContext (`client/src/context/`), AuthModal (Đăng ký / Đăng nhập), OnboardingModal (Khảo sát hồ sơ làn da), and SkinProfileCard.
+- Updated `client/src/App.jsx` to provide interactive authentication flow and onboarding completion.
+- Verified all endpoints with `Invoke-RestMethod`, verified `oxlint` (0 errors, 0 warnings), and verified `npm.cmd run build` (253ms).
+- Marked Milestone M3 as complete.

@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import { isDbConnected } from './db.js';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 
@@ -22,15 +24,20 @@ app.use(
 
 app.use(express.json());
 
+// API health endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'glow-and-go-backend',
     environment: process.env.NODE_ENV || 'development',
+    database: isDbConnected() ? 'connected' : 'disconnected',
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
   });
 });
+
+// Authentication and user profile routes
+app.use('/api/auth', authRoutes);
 
 // Handle 404 for unknown routes
 app.use((req, res) => {

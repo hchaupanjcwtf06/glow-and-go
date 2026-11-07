@@ -50,7 +50,7 @@ Glow & Go là ứng dụng web quản lý quy trình chăm sóc da cá nhân (sk
 - [x] **M0** — Xác minh repository, Git status, Node/npm, thiết lập `.gitignore` và `README.md`.
 - [x] **M1** — Khởi tạo `client/` (React Vite) và `server/` (Express); kiểm tra chạy local và endpoint `/api/health`.
 - [x] **M2** — Cấu hình biến môi trường, CORS, tích hợp API và kiểm thử triển khai ban đầu.
-- [ ] **M3** — Hệ thống xác thực và onboarding hồ sơ da + mục tiêu người dùng.
+- [x] **M3** — Hệ thống xác thực và onboarding hồ sơ da + mục tiêu người dùng.
 - [ ] **M4** — CRUD sản phẩm và kệ mỹ phẩm trực quan Ngày/Đêm.
 - [ ] **M5** — Gợi ý sản phẩm tự động qua Gemini API có người dùng duyệt.
 - [ ] **M6** — Tích hợp dữ liệu thời tiết/UV/AQI và engine đề xuất routine theo luật an toàn.
