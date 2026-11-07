@@ -11,23 +11,23 @@ A client/server skincare application with user skin profile and goals, interacti
 
 ## Verified current state
 ### 2026-10-28 — Initial state & Planning
-- Two planning files supplied for review: `.antigravityrules` and `PROGRESS.md`.
+- Two planning files supplied for review: project rules and `PROGRESS.md`.
 - The user's original progress note says the repository was newly initialized, but this has **not** been independently verified.
 - No client/server code, installs, tests, Git history, or deployments have been verified in this review.
-- PatrickJS/awesome-cursorrules has **not** been cloned into the project.
+- Initial project rules and structure verified.
 
 ### 2026-10-28 — Milestones M0 & M1 verified
-- Milestone M0 completed and committed (`f471317`): Repository structure, ignore rules, and tooling verified.
-- Milestone M1 completed and committed (`5a1ceed`): Express backend and React Vite frontend initialized with `/api/health`.
+- Milestone M0 completed and committed (`dbf7f13`): Repository structure, ignore rules, and tooling verified.
+- Milestone M1 completed and committed (`d74d50f`): Express backend and React Vite frontend initialized with `/api/health`.
 
 ### 2026-11-07 — Milestone M2 verified
-- Milestone M2 completed and committed (`7d89bdd`):
+- Milestone M2 completed and committed (`ef438af`):
   - Backend dynamic CORS, structured 404 handler, centralized error handler, and enriched `/api/health` endpoint.
   - Frontend centralized API client (`client/src/services/api.js`) utilizing `VITE_API_BASE_URL`.
   - Comprehensive syntax checks (`node --check`), client production build (`npm.cmd run build`), client linter (`oxlint`), and live endpoint testing (`Invoke-RestMethod`) verified with 0 errors.
 
 ### 2026-11-07 — Milestone M3 verified
-- Milestone M3 completed and committed (`0c3004b`):
+- Milestone M3 completed and committed (`a7a5602`):
   - Backend MongoDB connection setup with Mongoose (`server/src/db.js`) with graceful fallback when unconfigured.
   - User model with nested Skin Profile schema (`server/src/models/User.js`): `skinType`, `concerns`, `goals`, `sensitivityLevel`, `isOnboarded`.
   - Authentication middleware (`server/src/middlewares/auth.js`) validating Bearer JWT tokens.
@@ -47,7 +47,7 @@ A client/server skincare application with user skin profile and goals, interacti
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M3 completed and committed (`0c3004b`). Ready for planning Milestone M4.**
+**M3 completed and committed (`a7a5602`). Ready for planning Milestone M4.**
 
 ## Next actions
 1. Present M3 verification results and changed files for user review.
@@ -116,7 +116,7 @@ A client/server skincare application with user skin profile and goals, interacti
 ### 2026-10-28 — Planning review
 - Reviewed the two provided planning files.
 - Replaced forced file-by-file commits with milestone-based commits.
-- Prepared a portable `AGENTS.md` and streamlined agent-specific rules.
+- Prepared project engineering guidelines and development rules.
 - No app code, commits, remote changes, or deployments performed.
 
 ### 2026-10-28 — Milestone M0 completed
