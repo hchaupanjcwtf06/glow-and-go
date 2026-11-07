@@ -5,6 +5,7 @@ import AuthModal from './components/AuthModal';
 import OnboardingModal from './components/OnboardingModal';
 import SkinProfileCard from './components/SkinProfileCard';
 import ProductShelf from './components/ProductShelf';
+import DailyRoutine from './components/DailyRoutine';
 import api from './services/api';
 
 function AppContent() {
@@ -13,6 +14,7 @@ function AppContent() {
   const [healthError, setHealthError] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [mainTab, setMainTab] = useState('routine'); // 'routine' | 'shelf'
 
   useEffect(() => {
     api
@@ -239,8 +241,40 @@ function AppContent() {
                   onEdit={() => setIsOnboardingOpen(true)}
                 />
 
-                {/* Milestone M4 Virtual Shelf */}
-                <ProductShelf />
+                {/* Dashboard View Switcher: Routine vs Shelf */}
+                <div className="flex items-center space-x-2 border-b border-rose-100/80 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setMainTab('routine')}
+                    className={`pb-2.5 px-3 text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center space-x-2 border-b-2 ${
+                      mainTab === 'routine'
+                        ? 'border-rose-500 text-rose-700'
+                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <span>🌤️</span>
+                    <span>Chu trình hôm nay &amp; Thời tiết</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMainTab('shelf')}
+                    className={`pb-2.5 px-3 text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center space-x-2 border-b-2 ${
+                      mainTab === 'shelf'
+                        ? 'border-rose-500 text-rose-700'
+                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <span>🧴</span>
+                    <span>Kệ mỹ phẩm Ngày &amp; Đêm</span>
+                  </button>
+                </div>
+
+                {mainTab === 'routine' ? (
+                  <DailyRoutine onNavigateToShelf={() => setMainTab('shelf')} />
+                ) : (
+                  <ProductShelf />
+                )}
               </>
             )}
           </section>

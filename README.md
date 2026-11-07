@@ -53,6 +53,6 @@ Glow & Go là ứng dụng web quản lý quy trình chăm sóc da cá nhân (sk
 - [x] **M3** — Hệ thống xác thực và onboarding hồ sơ da + mục tiêu người dùng.
 - [x] **M4** — CRUD sản phẩm và kệ mỹ phẩm trực quan Ngày/Đêm.
 - [x] **M5** — Gợi ý sản phẩm tự động qua Gemini API có người dùng duyệt.
-- [ ] **M6** — Tích hợp dữ liệu thời tiết/UV/AQI và engine đề xuất routine theo luật an toàn.
+- [x] **M6** — Tích hợp dữ liệu thời tiết/UV/AQI và engine đề xuất routine theo luật an toàn.
 - [ ] **M7** — Nhật ký check-in hàng ngày, lịch sử sử dụng và báo cáo xu hướng.
 - [ ] **M8** — Gamification (chuỗi streak), giao diện nâng cao và tương tác kéo thả.

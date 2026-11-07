@@ -3,6 +3,7 @@ import cors from 'cors';
 import { isDbConnected } from './db.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import routineRoutes from './routes/routineRoutes.js';
 
 const app = express();
 
@@ -42,6 +43,9 @@ app.use('/api/auth', authRoutes);
 
 // Product and virtual shelf routes
 app.use('/api/products', productRoutes);
+
+// Daily skincare routine and environmental routes
+app.use('/api/routine', routineRoutes);
 
 // Handle 404 for unknown routes
 app.use((req, res) => {

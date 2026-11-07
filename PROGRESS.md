@@ -47,7 +47,7 @@ A client/server skincare application with user skin profile and goals, interacti
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint`), production build in 352ms, live endpoint security tests (401 on unauthorized access).
 
 ### 2026-11-07 — Milestone M5 verified
-- Milestone M5 completed:
+- Milestone M5 completed and committed (`2f08abd`):
   - Implemented backend product suggestion service (`server/src/services/geminiService.js`):
     - Direct Google Gemini REST API integration using Node native `fetch` without adding heavy dependencies.
     - Curated skincare knowledge base fallback covering 13+ popular skincare items (CeraVe, Paula's Choice BHA, The Ordinary, Anessa, La Roche-Posay, Skin1004, Klairs, Obagi, etc.) with keyword matching.
@@ -60,6 +60,26 @@ A client/server skincare application with user skin profile and goals, interacti
     - User remains in full control: all form fields (`name`, `brand`, `category`, `routineTime`, `paoMonths`, `activeIngredients`, `notes`) can be reviewed, edited, or expanded before saving to shelf.
   - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 14 files), production build in 420ms, backend test suite confirming 401 unauthenticated block, 400 validation, catalog match, and heuristic parsing.
 
+### 2026-11-07 — Milestone M6 verified
+- Milestone M6 completed:
+  - Environmental Data Provider (`server/src/services/weatherService.js`):
+    - Real-time weather, UV index, and AQI ingestion via Open-Meteo REST API with zero external API key requirements.
+    - Skincare evaluation logic for UV Index (Low, Moderate, High, Very High, Extreme) and AQI (Good, Moderate, Sensitive, Unhealthy) with graceful offline fallback.
+  - Deterministic Skincare Routine Engine (`server/src/services/routineEngine.js`):
+    - Strictly maps products to sequential scientific order (Cleanser ➔ Toner ➔ Serum ➔ Treatment ➔ Moisturizer ➔ Sunscreen).
+    - Separation of Morning (☀️) and Evening (🌙) routines (Sunscreen excluded from night; daytime prompts for sunscreen).
+    - Skincare Safety Filter: detects active ingredient conflicts (Retinol + BHA/AHA in same routine for sensitive skin), alerts if daytime sunscreen is absent, and offers weather-adaptive tips.
+    - Graceful Database-Disconnected Fallback: provides realistic demo shelf items when MongoDB is not connected so users can immediately experience the interactive routine.
+  - Backend API Endpoints (`server/src/routes/routineRoutes.js` & `server/src/controllers/routineController.js`):
+    - `GET /api/routine/environment`: returns real-time weather & air quality metrics for supported cities.
+    - `GET /api/routine/daily`: authenticated endpoint calculating personalized, safety-filtered daily routine.
+  - Frontend Interactive Daily Routine (`client/src/components/DailyRoutine.jsx`, `routineConstants.js`):
+    - City selector dropdown with live metrics (Temperature, Humidity, UV Index, AQI).
+    - Day / Night routine mode switcher.
+    - Interactive step checklist with completion progress bar and celebration banner.
+    - Prominent cosmetic wellness disclaimer banner.
+  - Verification: 0 syntax errors (`node --check`), 0 linter warnings (`oxlint` across 16 files), production build in 390ms, and automated integration test suite verified.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
@@ -67,17 +87,17 @@ A client/server skincare application with user skin profile and goals, interacti
 - [x] M3 — Authentication and first-login onboarding with Skin Profile + Goals.
 - [x] M4 — Product CRUD and interactive day/night virtual shelf.
 - [x] M5 — Gemini-assisted product auto-fill with user review.
-- [ ] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
+- [x] M6 — Weather/UV/AQI ingestion and rule-based daily routine suggestions.
 - [ ] M7 — Daily check-in, product-use history, analytics and report caveats.
 - [ ] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 
 ## Current focus
-**M5 completed. Ready for planning Milestone M6 (Weather/UV/AQI ingestion and rule-based daily routine suggestions).**
+**M6 completed. Ready for planning Milestone M7 (Daily check-in, product-use history, analytics and report caveats).**
 
 ## Next actions
-1. Present M5 verification results and changed files for user review.
-2. Commit Milestone M5 with a single, coherent commit message.
-3. Await user instructions before planning Milestone M6.
+1. Present M6 verification results and changed files for user review.
+2. Commit Milestone M6 with a single, coherent commit message upon user approval.
+3. Await user instructions before planning Milestone M7.
 
 ## Verification / tests
 ### Milestones M0 & M1 (2026-10-28)
@@ -156,10 +176,25 @@ A client/server skincare application with user skin profile and goals, interacti
   - Ran `oxlint` in `client/`: 0 warnings, 0 errors across 14 files.
   - Ran `npm.cmd run build` in `client/`: built production bundle in 420ms without warnings or errors.
 
+### Milestone M6 (2026-11-07)
+- Backend syntax verification:
+  - Passed `node --check` for `server/src/services/weatherService.js`, `server/src/services/routineEngine.js`, `server/src/controllers/routineController.js`, `server/src/routes/routineRoutes.js`, and `server/src/app.js` with exit code 0.
+- Live API endpoint verification (`GET /api/routine/environment` and `GET /api/routine/daily`):
+  - `GET /api/routine/environment?city=hcm`: returned HTTP 200 with real-time temperature, humidity, UV index, and AQI from Open-Meteo.
+  - `GET /api/routine/environment?city=hanoi`: returned HTTP 200 with accurate meteorological conditions for Hanoi.
+  - `GET /api/routine/daily` without token: returned HTTP 401 `{"error":{"message":"Authentication required. No token provided.","status":401}}`.
+  - `GET /api/routine/daily?type=day` with token: returned HTTP 200 with sequential day routine steps (Cleanser ➔ Toner ➔ Serum ➔ Treatment ➔ Moisturizer ➔ Sunscreen) and `isDemo: true` when database is disconnected.
+  - `GET /api/routine/daily?type=night` with token: returned HTTP 200 with night routine steps correctly excluding sunscreen.
+- Frontend code quality & build verification:
+  - Created `client/src/utils/routineConstants.js` and `client/src/components/DailyRoutine.jsx`.
+  - Integrated primary view switcher (`Chu trình hôm nay & Thời tiết` vs `Kệ mỹ phẩm Ngày & Đêm`) in `client/src/App.jsx`.
+  - Ran `oxlint` in `client/`: 0 warnings, 0 errors across all 16 files.
+  - Ran `npm.cmd run build` in `client/`: built production client bundle in 390ms without warnings or errors.
+
 ## Known issues and decisions pending
 - Windows PowerShell blocks script execution (`PSSecurityException` on `npm.ps1`); `npm.cmd` and `npx.cmd` must be used for package management commands.
 - Product data source, authentication method, API providers, and exact MongoDB schema to be addressed in subsequent milestones.
-- Milestone M6 will introduce Weather/UV/AQI provider ingestion and a deterministic rule-based skincare routine engine.
+- Milestone M7 will introduce daily check-ins, product-use history logging, and trend analytics.
 - Never include real secrets in Git, screenshots, or shared logs.
 
 ## Session log
@@ -226,3 +261,11 @@ A client/server skincare application with user skin profile and goals, interacti
 - Updated `client/src/components/ProductModal.jsx` with AI auto-fill bar, sample suggestion chips, and draft review disclaimer banner.
 - Verified 0 syntax errors, 0 linter warnings, successful production client build, and API integration tests.
 - Marked Milestone M5 as complete.
+
+### 2026-11-07 — Milestone M6 completed
+- Implemented `server/src/services/weatherService.js` fetching Open-Meteo weather, UV index, and AQI data for major Vietnamese cities with offline resilience.
+- Developed `server/src/services/routineEngine.js` applying deterministic rules, active ingredient conflict detection, and weather-adaptive tips with graceful disconnected-database demo shelf support.
+- Created `server/src/controllers/routineController.js` and `server/src/routes/routineRoutes.js` mounted at `/api/routine`.
+- Built interactive frontend `client/src/components/DailyRoutine.jsx` and dashboard switcher tabs in `client/src/App.jsx`.
+- Verified 0 syntax errors, 0 linter warnings, production build, and automated test suite.
+- Marked Milestone M6 as complete.
