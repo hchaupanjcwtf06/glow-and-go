@@ -39,28 +39,32 @@ export async function getProducts(req, res, next) {
       const { data: dbProducts, error } = await query.order('step_order', {
         ascending: true,
       });
-      if (error) throw error;
+      if (error && error.code === 'PGRST205') {
+        console.warn(
+          '⚠️ [Supabase] Bảng public.products chưa tồn tại. Đang dùng tủ mỹ phẩm mẫu offline.'
+        );
+      } else if (!error) {
+        const products = (dbProducts || []).map((p) => ({
+          _id: p.id,
+          id: p.id,
+          userId: p.user_id,
+          name: p.name,
+          brand: p.brand,
+          category: p.category,
+          routineTime: p.routine_time,
+          stepOrder: p.step_order,
+          openedDate: p.opened_date,
+          paoMonths: p.pao_months,
+          activeIngredients: p.active_ingredients || [],
+          notes: p.notes,
+          createdAt: p.created_at,
+        }));
 
-      const products = (dbProducts || []).map((p) => ({
-        _id: p.id,
-        id: p.id,
-        userId: p.user_id,
-        name: p.name,
-        brand: p.brand,
-        category: p.category,
-        routineTime: p.routine_time,
-        stepOrder: p.step_order,
-        openedDate: p.opened_date,
-        paoMonths: p.pao_months,
-        activeIngredients: p.active_ingredients || [],
-        notes: p.notes,
-        createdAt: p.created_at,
-      }));
-
-      return res.status(200).json({
-        count: products.length,
-        products,
-      });
+        return res.status(200).json({
+          count: products.length,
+          products,
+        });
+      }
     }
 
     // 2. MongoDB Atlas path

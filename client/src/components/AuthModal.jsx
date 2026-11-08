@@ -180,46 +180,6 @@ export default function AuthModal({ isOpen, onClose }) {
                 ? 'Tạo tài khoản ngay 🚀'
                 : 'Vào Glow & Go ✨'}
             </button>
-
-            {/* Quick Demo Login Option */}
-            {!isRegister && (
-              <div className="pt-2">
-                <div className="relative flex py-2 items-center">
-                  <div className="grow border-t border-slate-200" />
-                  <span className="shrink mx-3 text-xs text-slate-400 font-medium">
-                    hoặc trải nghiệm ngay
-                  </span>
-                  <div className="grow border-t border-slate-200" />
-                </div>
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={async () => {
-                    setError(null);
-                    setSubmitting(true);
-                    try {
-                      await login('demo@glow.vn', 'password123');
-                      onClose();
-                    } catch (err) {
-                      const msg =
-                        err.response?.data?.error?.message ||
-                        err.message ||
-                        'Đã có lỗi khi đăng nhập tài khoản Demo!';
-                      setError(msg);
-                    } finally {
-                      setSubmitting(false);
-                    }
-                  }}
-                  className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-50 to-rose-50 hover:from-amber-100 hover:to-rose-100 border border-amber-200/80 text-amber-900 font-bold text-xs rounded-2xl shadow-xs transition-all duration-200 flex items-center justify-center space-x-2 cursor-pointer hover:shadow-sm"
-                >
-                  <span>⚡</span>
-                  <span>Đăng nhập nhanh với tài khoản Demo (demo@glow.vn)</span>
-                </button>
-                <p className="text-[11px] text-center text-slate-400 mt-1.5">
-                  Không cần kết nối MongoDB Atlas — đầy đủ tủ mỹ phẩm &amp; dữ liệu mẫu!
-                </p>
-              </div>
-            )}
           </form>
         </div>
       </div>

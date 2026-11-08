@@ -1,30 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import { isDbConnected } from '../db.js';
 import { JWT_SECRET } from '../middlewares/auth.js';
 import { supabase, isSupabaseConfigured } from '../supabase.js';
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 const ALLOWED_SKIN_TYPES = ['oily', 'dry', 'combination', 'normal', 'sensitive'];
 const ALLOWED_SENSITIVITY = ['low', 'medium', 'high'];
-
-// Default demo account credentials and initial skin profile
-export const DEMO_USER = {
-  _id: '507f1f77bcf86cd799439011',
-  name: 'Tô Huyền Châu',
-  email: 'demo@glow.vn',
-  skinProfile: {
-    skinType: 'combination',
-    concerns: ['oiliness', 'pore', 'dark_spots'],
-    goals: ['hydration', 'glow', 'barrier'],
-    sensitivityLevel: 'low',
-    isOnboarded: true,
-  },
-  createdAt: new Date('2026-03-01T08:00:00.000Z'),
-};
-
-let currentDemoUser = { ...DEMO_USER };
 
 export async function register(req, res, next) {
   try {
@@ -33,7 +14,7 @@ export async function register(req, res, next) {
     if (!name || name.trim().length < 2) {
       return res.status(400).json({
         error: {
-          message: 'Name is required and must be at least 2 characters long.',
+          message: 'Tên phải có ít nhất 2 ký tự.',
           status: 400,
         },
       });
@@ -42,7 +23,7 @@ export async function register(req, res, next) {
     if (!email || !EMAIL_REGEX.test(email)) {
       return res.status(400).json({
         error: {
-          message: 'A valid email address is required.',
+          message: 'Email không đúng định dạng.',
           status: 400,
         },
       });
@@ -51,7 +32,7 @@ export async function register(req, res, next) {
     if (!password || password.length < 6) {
       return res.status(400).json({
         error: {
-          message: 'Password must be at least 6 characters long.',
+          message: 'Mật khẩu phải có ít nhất 6 ký tự.',
           status: 400,
         },
       });
@@ -59,18 +40,28 @@ export async function register(req, res, next) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 1. Supabase Cloud Database path
+    // 1. Supabase Cloud Database
     if (isSupabaseConfigured()) {
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: checkError } = await supabase
         .from('users')
         .select('id')
         .eq('email', normalizedEmail)
         .maybeSingle();
 
+      if (checkError?.code === 'PGRST205') {
+        return res.status(503).json({
+          error: {
+            message:
+              'Bảng public.users chưa tồn tại trên Supabase. Vui lòng chạy file server/src/db/supabase-schema.sql trong Supabase SQL Editor.',
+            status: 503,
+          },
+        });
+      }
+
       if (existingUser) {
         return res.status(400).json({
           error: {
-            message: 'An account with this email address already exists.',
+            message: 'Email này đã được sử dụng. Vui lòng đăng nhập hoặc chọn email khác.',
             status: 400,
           },
         });
@@ -119,79 +110,19 @@ export async function register(req, res, next) {
       );
 
       return res.status(201).json({
-        message: 'Registration successful',
+        message: 'Đăng ký tài khoản thành công',
         token,
         user,
       });
     }
 
-    // 2. MongoDB Atlas path
-    if (isDbConnected()) {
-      const existingUser = await User.findOne({ email: normalizedEmail });
-
-      if (existingUser) {
-        return res.status(400).json({
-          error: {
-            message: 'An account with this email address already exists.',
-            status: 400,
-          },
-        });
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      const user = await User.create({
-        name: name.trim(),
-        email: normalizedEmail,
-        password: hashedPassword,
-      });
-
-      const token = jwt.sign(
-        { id: user._id, email: user.email },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      return res.status(201).json({
-        message: 'Registration successful',
-        token,
-        user,
-      });
-    }
-
-    // 3. Offline in-memory fallback
-    const userPayload = {
-      _id: '507f1f77bcf86cd799439011',
-      name: name.trim(),
-      email: normalizedEmail,
-      skinProfile: {
-        skinType: 'normal',
-        concerns: [],
-        goals: [],
-        sensitivityLevel: 'medium',
-        isOnboarded: false,
+    // 2. Offline fallback if Supabase credentials are missing
+    return res.status(503).json({
+      error: {
+        message:
+          'Dịch vụ cơ sở dữ liệu chưa sẵn sàng. Vui lòng kiểm tra SUPABASE_URL trong server/.env',
+        status: 503,
       },
-      createdAt: new Date(),
-    };
-    currentDemoUser = userPayload;
-
-    const token = jwt.sign(
-      {
-        id: userPayload._id,
-        email: userPayload.email,
-        name: userPayload.name,
-        skinProfile: userPayload.skinProfile,
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    return res.status(201).json({
-      message: 'Registration successful (chế độ demo offline)',
-      token,
-      user: userPayload,
-      isDemo: true,
     });
   } catch (err) {
     return next(err);
@@ -205,7 +136,7 @@ export async function login(req, res, next) {
     if (!email || !password) {
       return res.status(400).json({
         error: {
-          message: 'Email and password are required.',
+          message: 'Vui lòng nhập đầy đủ email và mật khẩu.',
           status: 400,
         },
       });
@@ -213,7 +144,7 @@ export async function login(req, res, next) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 1. Supabase Cloud Database path
+    // 1. Supabase Cloud Database
     if (isSupabaseConfigured()) {
       const { data: userRecord, error: userError } = await supabase
         .from('users')
@@ -221,10 +152,20 @@ export async function login(req, res, next) {
         .eq('email', normalizedEmail)
         .maybeSingle();
 
+      if (userError?.code === 'PGRST205') {
+        return res.status(503).json({
+          error: {
+            message:
+              'Bảng public.users chưa tồn tại trên Supabase. Vui lòng chạy file server/src/db/supabase-schema.sql trong Supabase SQL Editor.',
+            status: 503,
+          },
+        });
+      }
+
       if (!userRecord || userError) {
         return res.status(401).json({
           error: {
-            message: 'Invalid email or password.',
+            message: 'Email hoặc mật khẩu không chính xác.',
             status: 401,
           },
         });
@@ -234,7 +175,7 @@ export async function login(req, res, next) {
       if (!isMatch) {
         return res.status(401).json({
           error: {
-            message: 'Invalid email or password.',
+            message: 'Email hoặc mật khẩu không chính xác.',
             status: 401,
           },
         });
@@ -261,74 +202,19 @@ export async function login(req, res, next) {
       );
 
       return res.status(200).json({
-        message: 'Login successful',
+        message: 'Đăng nhập thành công',
         token,
         user,
       });
     }
 
-    // 2. MongoDB Atlas path
-    if (isDbConnected()) {
-      const user = await User.findOne({ email: normalizedEmail });
-
-      if (!user) {
-        return res.status(401).json({
-          error: {
-            message: 'Invalid email or password.',
-            status: 401,
-          },
-        });
-      }
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(401).json({
-          error: {
-            message: 'Invalid email or password.',
-            status: 401,
-          },
-        });
-      }
-
-      const token = jwt.sign(
-        { id: user._id, email: user.email },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      return res.status(200).json({
-        message: 'Login successful',
-        token,
-        user,
-      });
-    }
-
-    // 3. Instant demo login or offline login without requiring database
-    const userPayload = {
-      ...currentDemoUser,
-      email: normalizedEmail === 'demo@glow.vn' ? 'demo@glow.vn' : normalizedEmail,
-      name:
-        normalizedEmail === 'demo@glow.vn'
-          ? currentDemoUser.name
-          : normalizedEmail.split('@')[0] || 'Tô Huyền Châu',
-    };
-
-    const token = jwt.sign(
-      {
-        id: userPayload._id,
-        email: userPayload.email,
-        name: userPayload.name,
-        skinProfile: userPayload.skinProfile,
+    // 2. Offline fallback
+    return res.status(503).json({
+      error: {
+        message:
+          'Dịch vụ cơ sở dữ liệu chưa sẵn sàng. Vui lòng kiểm tra SUPABASE_URL trong server/.env',
+        status: 503,
       },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    return res.status(200).json({
-      message: 'Login successful (tài khoản demo offline)',
-      token,
-      user: userPayload,
-      isDemo: true,
     });
   } catch (err) {
     return next(err);
@@ -338,13 +224,13 @@ export async function login(req, res, next) {
 export async function getMe(req, res, next) {
   try {
     if (isSupabaseConfigured()) {
-      const { data: userRecord } = await supabase
+      const { data: userRecord, error: getMeErr } = await supabase
         .from('users')
         .select('id, name, email, skin_profile, created_at')
         .eq('id', req.user._id || req.user.id)
         .maybeSingle();
 
-      if (userRecord) {
+      if (userRecord && !getMeErr) {
         return res.status(200).json({
           user: {
             _id: userRecord.id,
@@ -358,19 +244,8 @@ export async function getMe(req, res, next) {
       }
     }
 
-    if (isDbConnected()) {
-      return res.status(200).json({
-        user: req.user,
-      });
-    }
-
     return res.status(200).json({
-      user: {
-        ...currentDemoUser,
-        ...(req.user || {}),
-        skinProfile: req.user?.skinProfile || currentDemoUser.skinProfile,
-      },
-      isDemo: true,
+      user: req.user,
     });
   } catch (err) {
     return next(err);
@@ -424,7 +299,7 @@ export async function updateSkinProfile(req, res, next) {
         })
         .eq('id', req.user._id || req.user.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (updateErr) throw updateErr;
 
@@ -440,57 +315,12 @@ export async function updateSkinProfile(req, res, next) {
       });
     }
 
-    // 2. MongoDB Atlas path
-    if (isDbConnected()) {
-      const user = await User.findById(req.user._id);
-      if (!user) {
-        return res.status(404).json({
-          error: {
-            message: 'User account not found.',
-            status: 404,
-          },
-        });
-      }
-
-      user.skinProfile = {
-        skinType: skinType || user.skinProfile?.skinType || 'normal',
-        concerns: Array.isArray(concerns)
-          ? concerns
-          : user.skinProfile?.concerns || [],
-        goals: Array.isArray(goals) ? goals : user.skinProfile?.goals || [],
-        sensitivityLevel:
-          sensitivityLevel || user.skinProfile?.sensitivityLevel || 'medium',
-        isOnboarded: true,
-      };
-
-      await user.save();
-
-      return res.status(200).json({
-        message: 'Skin profile updated successfully',
-        user,
-      });
-    }
-
-    // 3. Offline in-memory fallback
-    currentDemoUser.skinProfile = {
-      skinType: skinType || currentDemoUser.skinProfile?.skinType || 'normal',
-      concerns: Array.isArray(concerns)
-        ? concerns
-        : currentDemoUser.skinProfile?.concerns || [],
-      goals: Array.isArray(goals)
-        ? goals
-        : currentDemoUser.skinProfile?.goals || [],
-      sensitivityLevel:
-        sensitivityLevel ||
-        currentDemoUser.skinProfile?.sensitivityLevel ||
-        'medium',
-      isOnboarded: true,
-    };
-
-    return res.status(200).json({
-      message: 'Skin profile updated successfully (chế độ demo offline)',
-      user: currentDemoUser,
-      isDemo: true,
+    return res.status(503).json({
+      error: {
+        message:
+          'Database is currently unavailable. Please verify SUPABASE_URL configuration.',
+        status: 503,
+      },
     });
   } catch (err) {
     return next(err);
