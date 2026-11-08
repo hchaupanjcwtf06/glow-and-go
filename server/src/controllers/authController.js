@@ -87,7 +87,18 @@ export async function register(req, res, next) {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        if (insertError.code === '42501') {
+          return res.status(403).json({
+            error: {
+              message:
+                'Supabase chặn quyền thêm dữ liệu (Row-Level Security). Vui lòng chạy lệnh SQL cấp quyền hoặc điền service_role key.',
+              status: 403,
+            },
+          });
+        }
+        throw insertError;
+      }
 
       const user = {
         _id: newUser.id,

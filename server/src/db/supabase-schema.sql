@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS public.users (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Index on email for fast lookups during login/registration
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users (lower(email));
 
 -- -------------------------------------------------------------------------
@@ -51,7 +50,6 @@ CREATE TABLE IF NOT EXISTS public.products (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Indexes for shelf filtering
 CREATE INDEX IF NOT EXISTS idx_products_user ON public.products (user_id);
 CREATE INDEX IF NOT EXISTS idx_products_routine ON public.products (user_id, routine_time);
 
@@ -61,7 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_products_routine ON public.products (user_id, rou
 CREATE TABLE IF NOT EXISTS public.check_ins (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  date TEXT NOT NULL, -- Format: YYYY-MM-DD
+  date TEXT NOT NULL,
   routine_type TEXT NOT NULL DEFAULT 'day' CHECK (
     routine_type IN ('day', 'night', 'both')
   ),
@@ -84,12 +82,21 @@ CREATE TABLE IF NOT EXISTS public.check_ins (
 CREATE INDEX IF NOT EXISTS idx_checkins_user_date ON public.check_ins (user_id, date DESC);
 
 -- -------------------------------------------------------------------------
--- 4. Permissions & PostgREST Schema Cache Reload
+-- 4. Row-Level Security (RLS) Policies & Permissions
 -- -------------------------------------------------------------------------
--- Cho phép backend Express truy cập đọc ghi bình thường qua API keys
-ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
-ALTER TABLE public.check_ins DISABLE ROW LEVEL SECURITY;
+-- Bật RLS và cấp quyền truy cập toàn diện cho anon & authenticated
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.check_ins ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all for users" ON public.users;
+CREATE POLICY "Allow all for users" ON public.users FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all for products" ON public.products;
+CREATE POLICY "Allow all for products" ON public.products FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all for check_ins" ON public.check_ins;
+CREATE POLICY "Allow all for check_ins" ON public.check_ins FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
 GRANT ALL ON TABLE public.users TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.products TO anon, authenticated, service_role;
