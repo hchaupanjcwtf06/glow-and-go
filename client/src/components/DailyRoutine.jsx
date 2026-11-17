@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { CITIES_LIST, UV_RISK_COLORS } from '../utils/routineConstants';
 import CheckInModal from './CheckInModal';
+import SpotlightCard from './reactbits/SpotlightCard';
 
 export default function DailyRoutine({ onNavigateToShelf }) {
   const [selectedCity, setSelectedCity] = useState('hcm');
@@ -109,7 +110,11 @@ export default function DailyRoutine({ onNavigateToShelf }) {
         {environment ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5">
             {/* Temperature */}
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs">
+            <SpotlightCard
+              className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs react-bits-glow"
+              spotlightColor="rgba(244, 63, 94, 0.18)"
+              borderColor="rgba(251, 113, 133, 0.4)"
+            >
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                 Nhiệt độ
               </span>
@@ -121,10 +126,14 @@ export default function DailyRoutine({ onNavigateToShelf }) {
                   {environment.temperature >= 32 ? '🔥 Nóng' : '🌿 Dịu mát'}
                 </span>
               </div>
-            </div>
+            </SpotlightCard>
 
             {/* Humidity */}
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs">
+            <SpotlightCard
+              className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs react-bits-glow"
+              spotlightColor="rgba(6, 182, 212, 0.18)"
+              borderColor="rgba(103, 232, 249, 0.4)"
+            >
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                 Độ ẩm
               </span>
@@ -136,10 +145,14 @@ export default function DailyRoutine({ onNavigateToShelf }) {
                   {environment.evaluations?.humidity?.status || 'Lý tưởng'}
                 </span>
               </div>
-            </div>
+            </SpotlightCard>
 
             {/* UV Index Badge */}
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs">
+            <SpotlightCard
+              className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs react-bits-glow"
+              spotlightColor="rgba(245, 158, 11, 0.2)"
+              borderColor="rgba(252, 211, 77, 0.4)"
+            >
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                 Chỉ số UV
               </span>
@@ -156,10 +169,14 @@ export default function DailyRoutine({ onNavigateToShelf }) {
                   {environment.evaluations?.uv?.level || 'Bình thường'}
                 </span>
               </div>
-            </div>
+            </SpotlightCard>
 
             {/* AQI Badge */}
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs">
+            <SpotlightCard
+              className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 shadow-2xs react-bits-glow"
+              spotlightColor="rgba(168, 85, 247, 0.18)"
+              borderColor="rgba(216, 180, 254, 0.4)"
+            >
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                 Bụi mịn AQI
               </span>
@@ -171,7 +188,7 @@ export default function DailyRoutine({ onNavigateToShelf }) {
                   {environment.evaluations?.aqi?.level || 'Trung bình'}
                 </span>
               </div>
-            </div>
+            </SpotlightCard>
           </div>
         ) : (
           <div className="py-4 text-center text-xs text-slate-400 animate-pulse">

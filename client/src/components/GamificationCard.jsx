@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { BADGE_GRADIENTS, BADGE_BORDERS } from '../utils/gamificationConstants';
+import SpotlightCard from './reactbits/SpotlightCard';
 
 export default function GamificationCard() {
   const [data, setData] = useState(null);
@@ -43,7 +44,11 @@ export default function GamificationCard() {
   return (
     <div className="space-y-6">
       {/* Streak Hero Banner */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-rose-100 shadow-sm bg-gradient-to-br from-rose-50/70 via-pink-50/40 to-amber-50/60">
+      <SpotlightCard
+        className="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-rose-100 shadow-sm bg-gradient-to-br from-rose-50/70 via-pink-50/40 to-amber-50/60"
+        spotlightColor="rgba(249, 115, 22, 0.22)"
+        borderColor="rgba(251, 146, 60, 0.5)"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="flex items-start space-x-4">
             {/* Animated Flame Icon Container */}
@@ -87,7 +92,7 @@ export default function GamificationCard() {
             </span>
           </div>
         </div>
-      </div>
+      </SpotlightCard>
 
       {/* Badges Showcase Grid */}
       <div className="glass-card rounded-3xl p-6 sm:p-7 border border-rose-100 shadow-sm space-y-5">
@@ -121,10 +126,20 @@ export default function GamificationCard() {
               const gradientClass = BADGE_GRADIENTS[badge.id] || 'from-rose-400 to-pink-500';
 
               return (
-                <div
+                <SpotlightCard
                   key={badge.id}
                   onClick={() => setSelectedBadge(badge)}
-                  className={`p-5 rounded-3xl border transition-all duration-300 cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  spotlightColor={
+                    badge.isUnlocked
+                      ? 'rgba(244, 63, 94, 0.22)'
+                      : 'rgba(148, 163, 184, 0.15)'
+                  }
+                  borderColor={
+                    badge.isUnlocked
+                      ? 'rgba(251, 113, 133, 0.5)'
+                      : 'rgba(203, 213, 225, 0.4)'
+                  }
+                  className={`p-5 rounded-3xl border transition-all duration-300 cursor-pointer relative overflow-hidden flex flex-col justify-between react-bits-glow ${
                     badge.isUnlocked
                       ? `${borderClass} hover:shadow-md hover:scale-[1.02] shadow-2xs`
                       : 'border-slate-200/80 bg-slate-50/40 opacity-70 hover:opacity-90'
@@ -181,7 +196,7 @@ export default function GamificationCard() {
                       />
                     </div>
                   </div>
-                </div>
+                </SpotlightCard>
               );
             })}
           </div>

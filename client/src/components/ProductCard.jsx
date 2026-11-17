@@ -1,4 +1,5 @@
 import { CATEGORY_CONFIG, ROUTINE_TIME_BADGES } from '../utils/productConstants';
+import SpotlightCard from './reactbits/SpotlightCard';
 
 function calculatePaoStatus(openedDate, paoMonths) {
   if (!openedDate || !paoMonths) return null;
@@ -37,7 +38,11 @@ export default function ProductCard({ product, onEdit, onDelete }) {
   const pao = calculatePaoStatus(product.openedDate, product.paoMonths);
 
   return (
-    <div className="group relative bg-white/90 hover:bg-white rounded-3xl p-5 border border-rose-100/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+    <SpotlightCard
+      className="group relative bg-white/90 hover:bg-white rounded-3xl p-5 border border-rose-100/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden react-bits-glow"
+      spotlightColor="rgba(244, 63, 94, 0.18)"
+      borderColor="rgba(251, 113, 133, 0.5)"
+    >
       {/* Top action row */}
       <div>
         <div className="flex items-center justify-between gap-2 mb-3">
@@ -135,6 +140,6 @@ export default function ProductCard({ product, onEdit, onDelete }) {
           </button>
         </div>
       </div>
-    </div>
+    </SpotlightCard>
   );
 }

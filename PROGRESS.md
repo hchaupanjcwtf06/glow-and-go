@@ -142,6 +142,16 @@ A client/server skincare application with user skin profile and goals, interacti
     - Proxy pattern for `supabase` client ensuring dynamic credential checking without startup crash.
   - Verification: 0 syntax errors across all server files (`node --check`), clean server startup with no MongoDB warnings, automated Node test suite passed, `oxlint` 0 warnings/0 errors, client build completed in 357ms.
 
+### 2026-11-17 — React Bits UI Enhancement verified
+- React Bits Interactive Effects Suite integrated:
+  - `SpotlightCard` (`client/src/components/reactbits/SpotlightCard.jsx`): Cursor-following radial light glow across card borders and surfaces applied to Virtual Shelf products, Weather metrics, Routine steps, and Achievement badges.
+  - `AuroraBackground` (`client/src/components/reactbits/AuroraBackground.jsx`): Multi-layered ambient fluid light mesh in pastel dewy skincare tones (Rose Quartz, Champagne, Lavender, Hydrating Aqua).
+  - `ShinyText` (`client/src/components/reactbits/ShinyText.jsx`): Animated light-sweep shimmer across hero headlines.
+  - `TiltedCard` (`client/src/components/reactbits/TiltedCard.jsx`): 3D perspective tilt on hover with realistic glare highlight.
+  - `ClickSpark` (`client/src/components/reactbits/ClickSpark.jsx`): Interactive sparkle particle burst on user click.
+  - `MagnetButton` (`client/src/components/reactbits/MagnetButton.jsx`): Elastic magnetic attraction towards mouse cursor on primary CTA buttons.
+  - Verification: 0 linter errors/warnings (`oxlint`), Vite production build in 929ms without errors.
+
 ## Milestone tracker
 - [x] M0 — Verify local repo, Git status, Node/npm, and folder structure; add project instructions and `.gitignore` if needed.
 - [x] M1 — Initialize `client/` Vite React and `server/` Express; verify both run locally and backend has `/api/health`.
@@ -154,9 +164,10 @@ A client/server skincare application with user skin profile and goals, interacti
 - [x] M8 — Optional streak rewards, themes, sticker/drag-drop upgrades.
 - [x] Offline Demo Mode — In-memory demo test account and full offline shelf support for immediate testing without MongoDB Atlas.
 - [x] Supabase Cloud Database — Supabase PostgreSQL integration with dual-cloud fallback and SQL migration script.
+- [x] React Bits Visual Enhancement — Interactive lighting, 3D tilt cards, cursor spotlights, magnetic buttons, and aurora glow.
 
 ## Current focus
-**Backend completely migrated to Supabase Cloud Database (PostgreSQL) with MongoDB fully removed.**
+**React Bits interactive visual components fully integrated across client UI.**
 
 ## Next actions
 1. User adds their `SUPABASE_URL` and `SUPABASE_ANON_KEY` to `server/.env`.

@@ -9,6 +9,61 @@
   }
 }
 
+/* React Bits: Shimmering Text Animation */
+@keyframes shiny-sweep {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+/* React Bits: Click Spark Particle Burst */
+@keyframes spark-burst {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.6) rotate(0deg);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(1.15) rotate(20deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px) * 1.5), calc(-50% + var(--dy, 0px) * 1.5)) scale(0.3) rotate(45deg);
+  }
+}
+
+.animate-spark-burst {
+  animation: spark-burst 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* React Bits: Aurora Background Fluid Motion */
+@keyframes aurora-float-1 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(45px, 35px) scale(1.08); }
+  100% { transform: translate(-35px, 50px) scale(0.95); }
+}
+
+@keyframes aurora-float-2 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-50px, -40px) scale(1.12); }
+  100% { transform: translate(35px, 45px) scale(0.92); }
+}
+
+@keyframes aurora-float-3 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(40px, -50px) scale(1.06); }
+  100% { transform: translate(-45px, 25px) scale(1.1); }
+}
+
+@keyframes aurora-float-4 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-35px, 35px) scale(1.14); }
+  100% { transform: translate(50px, -25px) scale(0.9); }
+}
+
 @keyframes float-slow {
   0%, 100% {
     transform: translateY(0px) rotate(0deg);
@@ -50,6 +105,7 @@
   animation: pulse-glow 6s ease-in-out infinite;
 }
 
+/* Glassmorphism card styles */
 .glass-card {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
@@ -65,4 +121,22 @@
 .glass-card-hover:hover {
   transform: translateY(-3px);
   box-shadow: 0 20px 40px -8px rgba(244, 114, 182, 0.16), 0 8px 20px -3px rgba(0, 0, 0, 0.04);
+}
+
+/* React Bits Dewy Glass Card */
+.react-bits-glow {
+  position: relative;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 40px -10px rgba(244, 114, 182, 0.12),
+              0 0 0 1px rgba(244, 63, 94, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.react-bits-glow:hover {
+  box-shadow: 0 24px 50px -12px rgba(244, 114, 182, 0.22),
+              0 0 25px 2px rgba(251, 113, 133, 0.18),
+              0 0 0 1px rgba(244, 63, 94, 0.16);
 }
